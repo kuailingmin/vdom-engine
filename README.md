@@ -1,4 +1,4 @@
-# vdom-engine
+# vdom-engine: Rethink and redesign React for Web
 virtual-dom engine that help everyone to build their own modern view library and user interfaces
 
 React is awesome, but also too huge to be a view library, its way of handle props to dom is very limit and hard to extend by user. Sometimes we need a smaller and extensible virtual-dom library.
