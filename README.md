@@ -129,7 +129,7 @@ Please follow the [React-basic Memoization Section](https://github.com/reactjs/r
 
 ## Handle context
 
-Unlike React, context is out of `Component#getChildContext`, it pass by `React.render` from top to bottom, just like `props`.
+Unlike React, context is out of `Component#getChildContext`, it is passed by `React.render` from top to bottom, just like `props`.
 
 ```javascript
 import React from 'vdom-engine'
