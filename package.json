@@ -49,5 +49,8 @@
         "*.js"
       ]
     }
-  ]
+  ],
+  "dependencies": {
+    "path-to-regexp": "^1.5.3"
+  }
 }
