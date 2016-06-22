@@ -6,9 +6,9 @@
   "jsnext:main": "src/index.js",
   "scripts": {
     "test": "",
-    "build:addons": "node_modules/.bin/babel ./addons --out-dir ./lib && babel ./src --out-dir ./lib",
+    "build:lib": "babel ./src --out-dir ./lib",
     "build": "node build.js",
-    "deploy": "node_modules/.bin/gulp deploy",
+    "deploy": "gulp deploy",
     "prepublish": "npm run build"
   },
   "repository": {

@@ -26,9 +26,10 @@ export function createElement(type, props, /* ...children */) {
 	}
 
 	let argsLen = arguments.length
-	let finalChildren = []
+	let finalChildren = _.emptyList
 
 	if (argsLen > 2) {
+		finalChildren = []
 		for (let i = 2; i < argsLen; i++) {
 		    let child = arguments[i]
 		    if (_.isArr(child)) {

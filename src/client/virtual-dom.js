@@ -1,5 +1,6 @@
 import { detachEvents } from './event-system'
-import * as _ from './util'
+import * as _ from '../share/util'
+import { attachProps, patchProps } from '../share/directive'
 import {
     SVGNamespaceURI,
     VELEMENT,
@@ -11,7 +12,7 @@ import {
     HOOK_WILL_UPDATE,
     HOOK_DID_UPDATE,
     HOOK_WILL_UNMOUNT
-} from './constant'
+} from '../share/constant'
 
 export function initVnode(vnode, context, namespaceURI) {
     let { vtype } = vnode
@@ -133,7 +134,7 @@ function initVelem(velem, context, namespaceURI) {
     }
 
     initVchildren(node, props.children, context)
-    _.attachProps(node, props)
+    attachProps(node, props)
 
     if (props[HOOK_WILL_MOUNT]) {
         props[HOOK_WILL_MOUNT].call(null, node, props)
@@ -299,7 +300,7 @@ function updateVelem(velem, newVelem, node) {
     if (newProps[HOOK_WILL_UPDATE]) {
         newProps[HOOK_WILL_UPDATE].call(null, node, newProps)
     }
-    _.patchProps(node, velem.props, newProps)
+    patchProps(node, velem.props, newProps)
     if (newProps[HOOK_DID_UPDATE]) {
         newProps[HOOK_DID_UPDATE].call(null, node, newProps)
     }
@@ -323,7 +324,7 @@ function destroyVelem(velem, node) {
 }
 
 function initVstateless(vstateless, context, namespaceURI) {
-    let vnode = renderVstateless(vstateless, context)
+    let vnode = _.renderVstateless(vstateless, context)
     let node = initVnode(vnode, context, namespaceURI)
     node.cache = node.cache || {}
     node.cache[vstateless.uid] = vnode
@@ -334,7 +335,7 @@ function updateVstateless(vstateless, newVstateless, node, context) {
     let uid = vstateless.uid
     let vnode = node.cache[uid]
     delete node.cache[uid]
-    let newVnode = renderVstateless(newVstateless, context)
+    let newVnode = _.renderVstateless(newVstateless, context)
     let newNode = compareTwoVnodes(vnode, newVnode, node, context)
     newNode.cache = newNode.cache || {}
     newNode.cache[newVstateless.uid] = newVnode
@@ -349,23 +350,6 @@ function destroyVstateless(vstateless, node) {
     let vnode = node.cache[uid]
     delete node.cache[uid]
     destroyVnode(vnode, node)
-}
-
-function renderVstateless(vstateless, context) {
-    let { type: factory, props } = vstateless
-    let vnode = factory(props, context)
-    if (vnode && vnode.render) {
-        vnode = vnode.render()
-    }
-    if (vnode === null || vnode === false) {
-        vnode = {
-            vtype: VCOMMENT,
-            uid: _.getUid(),
-        }
-    } else if (!vnode || !vnode.vtype) {
-        throw new Error(`@${factory.name}#render:You may have returned undefined, an array or some other invalid object`)
-    }
-    return vnode
 }
 
 

@@ -1,25 +1,11 @@
-// placeholder
-import * as _ from './util'
-import { createElement, createFactory, isValidElement } from './createElement'
-import { addDirective, removeDirective } from './directive'
-import { render, destroy } from './render'
-import { DOMAttrDirective, DOMPropDirective } from './DOMPropertyOperations'
-import { styleDirective } from './CSSPropertyOperations'
-import { eventDirective } from './event-system'
+import * as _ from './share/util'
+import Share from './share/index'
+import Client from './client/index'
+import Server from './server/index'
 
-addDirective('attr', DOMAttrDirective)
-addDirective('prop', DOMPropDirective)
-addDirective('on', eventDirective)
-addDirective('css', styleDirective)
+const VdomEngine = {}
+_.extend(VdomEngine, Share)
+_.extend(VdomEngine, Client)
+_.extend(VdomEngine, Server)
 
-const Vengine = {
-	createElement,
-	createFactory,
-	isValidElement,
-	addDirective,
-	removeDirective,
-	render,
-	destroy
-}
-
-export default Vengine
+export default VdomEngine

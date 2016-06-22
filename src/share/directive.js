@@ -11,7 +11,7 @@ export function removeDirective(name) {
 }
 
 let currentName = null
-function matchDirective(propKey) {
+export function matchDirective(propKey) {
 	let matches = propKey.match(DIRECTIVE_SPEC)
 	if (matches) {
 		currentName = matches[2]
@@ -19,14 +19,14 @@ function matchDirective(propKey) {
 	}
 }
 
-function attachProp(elem, propKey, propValue) {
+export function attachProp(elem, propKey, propValue) {
     let directive = matchDirective(propKey)
     if (directive) {
         directive.attach(elem, currentName, propValue)
     }
 }
 
-function detachProp(elem, propKey) {
+export function detachProp(elem, propKey) {
     let directive = matchDirective(propKey)
     if (directive) {
         directive.detach(elem, currentName)
@@ -65,4 +65,3 @@ export function patchProps(elem, props, newProps) {
         }
     }
 }
-

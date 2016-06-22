@@ -1,5 +1,9 @@
-import * as _ from './util'
-import { COMPONENT_ID } from './constant'
+import * as _ from '../share/util'
+import { COMPONENT_ID } from '../share/constant'
+import { addDirective } from '../share/directive'
+import { DOMAttrDirective, DOMPropDirective } from './DOMPropertyOperations'
+import { styleDirective } from './CSSPropertyOperations'
+import { eventDirective } from './event-system'
 import {
 	initVnode,
 	destroyVnode,
@@ -13,6 +17,12 @@ export function render(vnode, container, context, callback) {
 	if (!vnode.vtype) {
 		throw new Error(`cannot render ${ vnode } to container`)
 	}
+
+	addDirective('attr', DOMAttrDirective)
+	addDirective('prop', DOMPropDirective)
+	addDirective('on', eventDirective)
+	addDirective('css', styleDirective)
+
 	let id = container[COMPONENT_ID] || (container[COMPONENT_ID] = _.getUid())
 	let argsCache = pendingRendering[id]
 

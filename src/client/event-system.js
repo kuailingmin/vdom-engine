@@ -1,4 +1,4 @@
-import * as _ from './util'
+import * as _ from '../share/util'
 // event config
 const notBubbleEvents = {
     onmouseleave: 1,

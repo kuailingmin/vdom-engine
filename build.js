@@ -14,9 +14,9 @@ var banner =
     ' * Released under the MIT License.\n' +
     ' */'
 
-runRollupTask('./src/index', 'vdom-engine')
+runRollupTask('./src/index', 'vdom-engine', 'Vengine')
 
-function runRollupTask(entry, filename) {
+function runRollupTask(entry, filename, moduleName) {
 
     // CommonJS build.
     // this is used as the "main" field in package.json
@@ -52,7 +52,7 @@ function runRollupTask(entry, filename) {
                     return write('dist/' + filename + '.js', bundle.generate({
                         format: 'umd',
                         banner: banner,
-                        moduleName: 'Vengine'
+                        moduleName: moduleName
                     }).code)
                 })
         })
@@ -72,7 +72,7 @@ function runRollupTask(entry, filename) {
                 .then(function(bundle) {
                     var code = bundle.generate({
                         format: 'umd',
-                        moduleName: 'Vengine'
+                        moduleName: moduleName
                     }).code
                     var minified = banner + '\n' + uglify.minify(code, {
                         fromString: true
