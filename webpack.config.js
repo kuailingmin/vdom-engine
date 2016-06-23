@@ -4,11 +4,11 @@ var path = require('path');
 module.exports = {
     watch: true,
     entry: {
-        simple: './examples/simple/'
+        counter: './examples/counter/src'
     },
     output: {
         path: './examples/',
-        filename: '[name]/app.js'
+        filename: '[name]/index.js'
     },
     module: {
         loaders: [{
@@ -22,6 +22,9 @@ module.exports = {
     },
     resolve: {
         extensions: ['', '.js'],
-        root: __dirname
+        root: __dirname,
+        alias: {
+            'vdom-engine': path.join(__dirname, 'src'),
+        }
     }
 };

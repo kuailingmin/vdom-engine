@@ -6,12 +6,42 @@ export function isFn(obj) {
     return typeof obj === 'function'
 }
 
+export function isThenable(obj) {
+    return obj != null && isFn(obj.then)
+}
+
+export function invoke(fn) {
+    return fn()
+}
+
+export function createCollection(accessor, handler) {
+    return Object.keys(accessor).reduce((collection, key) => {
+        collection[key] = handler.bind(null, key)
+        return collection
+    }, {})
+}
+
 export let isArr = Array.isArray
 
 export function noop() {}
 export function identity(obj) {
     return obj
 }
+
+export function compose(...funcs) {
+  if (funcs.length === 0) {
+    return arg => arg
+  }
+
+  if (funcs.length === 1) {
+    return funcs[0]
+  }
+
+  const last = funcs[funcs.length - 1]
+  const rest = funcs.slice(0, -1)
+  return (...args) => rest.reduceRight((composed, f) => f(composed), last(...args))
+}
+
 export function pipe(fn1, fn2) {
     return function() {
         fn1.apply(this, arguments)

@@ -51,6 +51,8 @@
     }
   ],
   "dependencies": {
-    "path-to-regexp": "^1.5.3"
+    "path-to-regexp": "^1.5.3",
+    "querystring": "^0.2.0",
+    "redux-logger": "^2.6.1"
   }
 }

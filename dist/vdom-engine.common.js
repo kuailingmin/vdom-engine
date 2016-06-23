@@ -5,6 +5,11 @@
  */
 'use strict';
 
+var pathToRegexp = require('path-to-regexp');
+pathToRegexp = 'default' in pathToRegexp ? pathToRegexp['default'] : pathToRegexp;
+var querystring = require('querystring');
+querystring = 'default' in querystring ? querystring['default'] : querystring;
+
 var directives = {};
 var DIRECTIVE_SPEC = /^([^-]+)-(.+)$/;
 
@@ -88,6 +93,10 @@ var emptyList = [];
 
 function isFn(obj) {
     return typeof obj === 'function';
+}
+
+function isThenable(obj) {
+    return obj != null && isFn(obj);
 }
 
 var isArr = Array.isArray;
@@ -1099,9 +1108,140 @@ var Server = {
 	renderToString: renderToString
 };
 
+var createMatcher = function createMatcher(routes) {
+    return function (location, data) {
+        var state = extend({}, location);
+        var pathname = cleanPath(state.pathname);
+        var search = cleanSearch(state.search);
+        var params = state.params = {};
+        state.query = querystring.parse(search);
+        for (var pattern in routes) {
+            var isMatched = matchPath(pattern, pathname, params);
+            var handler = routes[pattern];
+            if (isMatched && isFn(handler)) {
+                handler(params, data);
+                break;
+            }
+        }
+        return state;
+    };
+};
+
+function matchPath(path, pathname, params) {
+    var keys = [];
+    var regexp = pathToRegexp(path, keys);
+    var matches = regexp.exec(pathname);
+
+    if (!matches) {
+        return false;
+    }
+
+    for (var i = 1, len = matches.length; i < len; i++) {
+        var key = keys[i - 1];
+        if (key) {
+            if (typeof matches[i] === 'string') {
+                params[key.name] = decodeURIComponent(matches[i]);
+            } else {
+                params[key.name] = matches[i];
+            }
+        }
+    }
+
+    return true;
+}
+
+function cleanSearch(search) {
+    return search[0] === '?' ? search.substr(1) : search;
+}
+
+function cleanPath(path) {
+    return path.replace(/\/\//g, '/');
+}
+
+var Router = {
+	createMatcher: createMatcher
+};
+
+function createStore(accessor, initialState) {
+	var getter = accessor.getter;
+	var setter = accessor.setter;
+
+	var currentState = initialState;
+	var listeners = [];
+
+	var store = {
+		getState: getState,
+		setState: setState,
+		setBy: setBy,
+		getBy: getBy,
+		subscribe: subscribe
+	};
+
+	return store;
+
+	function subscribe(listener) {
+		var index = listeners.indexOf(listener);
+		if (index === -1) {
+			listeners.push(listener);
+		}
+		return function () {
+			var index = listeners.indexOf(listener);
+			if (index !== -1) {
+				listeners.splice(i, 1);
+			}
+		};
+	}
+
+	function getState() {
+		return currentState;
+	}
+
+	function setState(nextState, silent) {
+		currentState = nextState;
+		if (!silent) {
+			listeners.forEach(invoke);
+		}
+		return currentState;
+	}
+
+	function setBy(setterName, data) {
+		var currentSetter = setter[setterName];
+		if (!isFn(currentSetter)) {
+			throw new Error('Expected ' + setterName + ' in setter to be a function which is ' + currentSetter);
+		}
+		var nextState = currentSetter(currentSetter, data);
+		if (isThenable(nextState)) {
+			return nextState.then(setState);
+		}
+		if (currentState !== nextState) {
+			setState(nextState);
+		}
+		return currentState;
+	}
+
+	function getBy(getterName, data) {
+		var currentGetter = getter(getterName);
+		if (!isFn(currentGetter)) {
+			throw new Error('Expected ' + getterName + ' in setter to be a function which is ' + currentGetter);
+		}
+		var result = currentGetter(currentState, data);
+		return result;
+	}
+}
+
+function invoke(fn) {
+	return fn();
+}
+
+var Store = {
+	createStore: createStore
+};
+
 var VdomEngine = {};
 extend(VdomEngine, Share);
 extend(VdomEngine, Client);
 extend(VdomEngine, Server);
+extend(VdomEngine, Router);
+extend(VdomEngine, Store);
 
 module.exports = VdomEngine;

@@ -1,5 +1,5 @@
 // router
-import { createMatcher } from './createMatcher'
+import createMatcher from './createMatcher'
 
 const Router = {
 	createMatcher,
