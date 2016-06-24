@@ -1,18 +1,13 @@
 import { createStore } from 'vdom-engine/store'
-import createLogger from 'redux-logger'
 import * as setter from './setter'
 
-
-let logger = createLogger({
-	duration: true
-})
 let initialState = {
 	count: 10
 }
-let accessor = {
+let settings = {
+	name: 'counter',
 	setter,
-	middlewares: [logger]
 }
-let store = createStore(accessor, initialState)
+let store = createStore(settings, initialState)
 
 export default store

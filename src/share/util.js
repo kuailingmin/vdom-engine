@@ -14,13 +14,6 @@ export function invoke(fn) {
     return fn()
 }
 
-export function createCollection(accessor, handler) {
-    return Object.keys(accessor).reduce((collection, key) => {
-        collection[key] = handler.bind(null, key)
-        return collection
-    }, {})
-}
-
 export let isArr = Array.isArray
 
 export function noop() {}

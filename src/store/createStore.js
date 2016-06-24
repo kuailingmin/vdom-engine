@@ -1,17 +1,19 @@
 import * as _ from '../share/util'
-import composeMiddlewares from './composeMiddlewares'
+import createLogger from './createLogger'
 
-export default function createStore(accessor, initialState) {
-	let { getter, setter, middlewares } = accessor
+export default function createStore(settings, initialState) {
+	let { getter, setter, name, debug } = settings
+	let logger = null
 
-	if (_.isArr(middlewares)) {
-		return composeMiddlewares(...middlewares)(createStore)({ getter, setter }, initialState)
+	if (debug !== false) {
+		logger = createLogger(name)
 	}
 
 	let currentState = initialState
 	let listeners = []
 
 	let store = {
+		logger,
 		setter,
 		getter,
 		getState,
@@ -22,11 +24,36 @@ export default function createStore(accessor, initialState) {
 	}
 
 	if (setter) {
-		store.actions = _.createCollection(setter, dispatch)
+		store.actions = Object.keys(setter).reduce((actions, key) => {
+			actions[key] = data => {
+				logger && logger.start(key)
+				let prevState = currentState
+				let nextState = currentState
+				let logEnd = nextState => {
+					logger && logger.end(key, data, prevState, nextState)
+				}
+				try {
+					nextState = dispatch(key, data)
+				} catch (error) {
+					logEnd(error)
+					return nextState
+				}
+				if (_.isThenable(nextState)) {
+					return nextState.then(logEnd, logEnd)
+				}
+				logEnd(nextState)
+				return nextState
+			}
+			return actions
+		}, {})
+
 	}
 
 	if (getter) {
-		store.selectors = _.createCollection(getter, search)
+		store.selectors = Object.keys(getter).reduce((selectors, key) => {
+			selectors[key] = search.bind(null, key)
+			return selectors
+		})
 	}
 
 	return store

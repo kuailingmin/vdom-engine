@@ -50,19 +50,19 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _vdomEngineShare = __webpack_require__(2);
+	var _vdomEngineShare = __webpack_require__(1);
 
 	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
 
-	var _vdomEngineClient = __webpack_require__(13);
+	var _vdomEngineClient = __webpack_require__(6);
 
 	var _vdomEngineClient2 = _interopRequireDefault(_vdomEngineClient);
 
-	var _CounterUI = __webpack_require__(1);
+	var _CounterUI = __webpack_require__(12);
 
 	var _CounterUI2 = _interopRequireDefault(_CounterUI);
 
-	var _store = __webpack_require__(7);
+	var _store = __webpack_require__(13);
 
 	var _store2 = _interopRequireDefault(_store);
 
@@ -84,85 +84,10 @@
 	Object.defineProperty(exports, '__esModule', {
 		value: true
 	});
-	exports['default'] = CounterUI;
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	var _createElement = __webpack_require__(2);
 
-	var _vdomEngineShare = __webpack_require__(2);
-
-	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
-
-	function CounterUI(_ref) {
-		var count = _ref.count;
-		var INCREMENT = _ref.INCREMENT;
-		var DECREMENT = _ref.DECREMENT;
-		var INCREMENT_IF_ODD = _ref.INCREMENT_IF_ODD;
-		var ASYNC_INCREMENT = _ref.ASYNC_INCREMENT;
-
-		return _vdomEngineShare2['default'].createElement(
-			'p',
-			null,
-			'Clicked: ',
-			_vdomEngineShare2['default'].createElement(
-				'span',
-				null,
-				count
-			),
-			' times',
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-click': INCREMENT },
-				'+'
-			),
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-click': DECREMENT },
-				'-'
-			),
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-click': INCREMENT_IF_ODD },
-				'Increment if odd'
-			),
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-click': ASYNC_INCREMENT },
-				'Increment async'
-			),
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-dblclick': INCREMENT },
-				'Increment by dblclick'
-			),
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-mousemove': DECREMENT },
-				'Decrement by mousemove'
-			)
-		);
-	}
-
-	module.exports = exports['default'];
-
-/***/ },
-/* 2 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-		value: true
-	});
-
-	var _createElement = __webpack_require__(3);
-
-	var _directive = __webpack_require__(6);
+	var _directive = __webpack_require__(5);
 
 	var Share = {
 		h: _createElement.createElement,
@@ -177,7 +102,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 3 */
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -191,9 +116,9 @@
 
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-	var _constant = __webpack_require__(4);
+	var _constant = __webpack_require__(3);
 
-	var _util = __webpack_require__(5);
+	var _util = __webpack_require__(4);
 
 	var _ = _interopRequireWildcard(_util);
 
@@ -283,7 +208,7 @@
 	}
 
 /***/ },
-/* 4 */
+/* 3 */
 /***/ function(module, exports) {
 
 	/*
@@ -318,7 +243,7 @@
 	exports.HOOK_WILL_UNMOUNT = HOOK_WILL_UNMOUNT;
 
 /***/ },
-/* 5 */
+/* 4 */
 /***/ function(module, exports) {
 
 	// util
@@ -331,7 +256,6 @@
 	exports.isFn = isFn;
 	exports.isThenable = isThenable;
 	exports.invoke = invoke;
-	exports.createCollection = createCollection;
 	exports.noop = noop;
 	exports.identity = identity;
 	exports.compose = compose;
@@ -355,13 +279,6 @@
 
 	function invoke(fn) {
 	    return fn();
-	}
-
-	function createCollection(accessor, handler) {
-	    return Object.keys(accessor).reduce(function (collection, key) {
-	        collection[key] = handler.bind(null, key);
-	        return collection;
-	    }, {});
 	}
 
 	var isArr = Array.isArray;
@@ -524,7 +441,7 @@
 	}
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports) {
 
 	// directive store
@@ -608,522 +525,7 @@
 	}
 
 /***/ },
-/* 7 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-		value: true
-	});
-
-	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	var _vdomEngineStore = __webpack_require__(8);
-
-	var _reduxLogger = __webpack_require__(11);
-
-	var _reduxLogger2 = _interopRequireDefault(_reduxLogger);
-
-	var _setter = __webpack_require__(12);
-
-	var setter = _interopRequireWildcard(_setter);
-
-	var logger = (0, _reduxLogger2['default'])({
-		duration: true
-	});
-	var initialState = {
-		count: 10
-	};
-	var accessor = {
-		setter: setter,
-		middlewares: [logger]
-	};
-	var store = (0, _vdomEngineStore.createStore)(accessor, initialState);
-
-	exports['default'] = store;
-	module.exports = exports['default'];
-
-/***/ },
-/* 8 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// store
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-		value: true
-	});
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	var _createStore = __webpack_require__(9);
-
-	var _createStore2 = _interopRequireDefault(_createStore);
-
-	var Store = {
-		createStore: _createStore2['default']
-	};
-
-	exports['default'] = Store;
-	module.exports = exports['default'];
-
-/***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-		value: true
-	});
-	exports['default'] = createStore;
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
-
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
-
-	var _shareUtil = __webpack_require__(5);
-
-	var _ = _interopRequireWildcard(_shareUtil);
-
-	var _composeMiddlewares = __webpack_require__(10);
-
-	var _composeMiddlewares2 = _interopRequireDefault(_composeMiddlewares);
-
-	function createStore(accessor, initialState) {
-		var getter = accessor.getter;
-		var setter = accessor.setter;
-		var middlewares = accessor.middlewares;
-
-		if (_.isArr(middlewares)) {
-			return _composeMiddlewares2['default'].apply(undefined, _toConsumableArray(middlewares))(createStore)({ getter: getter, setter: setter }, initialState);
-		}
-
-		var currentState = initialState;
-		var listeners = [];
-
-		var store = {
-			setter: setter,
-			getter: getter,
-			getState: getState,
-			replaceState: replaceState,
-			search: search,
-			dispatch: dispatch,
-			subscribe: subscribe
-		};
-
-		if (setter) {
-			store.actions = _.createCollection(setter, dispatch);
-		}
-
-		if (getter) {
-			store.selectors = _.createCollection(getter, search);
-		}
-
-		return store;
-
-		function subscribe(listener) {
-			var index = listeners.indexOf(listener);
-			if (index === -1) {
-				listeners.push(listener);
-			}
-			return function () {
-				var index = listeners.indexOf(listener);
-				if (index !== -1) {
-					listeners.splice(i, 1);
-				}
-			};
-		}
-
-		function getState() {
-			return currentState;
-		}
-
-		function replaceState(nextState, silent) {
-			currentState = nextState;
-			if (!silent) {
-				listeners.forEach(_.invoke);
-			}
-			return currentState;
-		}
-
-		function dispatch(type, data) {
-			var currentSetter = setter[type];
-			if (!_.isFn(currentSetter)) {
-				throw new Error('Expected a function which is ' + currentSetter);
-			}
-			var nextState = currentSetter(currentState, data);
-			if (_.isThenable(nextState)) {
-				return nextState.then(replaceState);
-			}
-			if (currentState !== nextState) {
-				replaceState(nextState);
-			}
-			return currentState;
-		}
-
-		function search(type, query) {
-			var currentGetter = getter(type);
-			if (!_.isFn(currentGetter)) {
-				throw new Error('Expected a function which is ' + currentGetter);
-			}
-			var result = currentGetter(currentState, query);
-			return result;
-		}
-	}
-
-	module.exports = exports['default'];
-
-/***/ },
-/* 10 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	    value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	exports['default'] = composeMiddlewares;
-
-	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
-
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
-
-	var _shareUtil = __webpack_require__(5);
-
-	var _ = _interopRequireWildcard(_shareUtil);
-
-	function composeMiddlewares() {
-	    for (var _len = arguments.length, middlewares = Array(_len), _key = 0; _key < _len; _key++) {
-	        middlewares[_key] = arguments[_key];
-	    }
-
-	    return function (createStore) {
-	        return function (accessor, initialState) {
-	            var store = createStore(accessor, initialState);
-	            var middlewareAPI = {
-	                getState: store.getState,
-	                dispatch: store.dispatch
-	            };
-	            var chain = middlewares.map(function (middleware) {
-	                return middleware(middlewareAPI);
-	            });
-	            var dispatch = _.compose.apply(_, _toConsumableArray(chain))(store.dispatch);
-	            var actions = _.createCollection(store.setter, dispatch);
-	            return _extends({}, store, {
-	                actions: actions,
-	                dispatch: dispatch
-	            });
-	        };
-	    };
-	}
-
-	module.exports = exports['default'];
-
-/***/ },
-/* 11 */
-/***/ function(module, exports) {
-
-	"use strict";
-
-	function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-	function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
-	var repeat = function repeat(str, times) {
-	  return new Array(times + 1).join(str);
-	};
-	var pad = function pad(num, maxLength) {
-	  return repeat("0", maxLength - num.toString().length) + num;
-	};
-	var formatTime = function formatTime(time) {
-	  return "@ " + pad(time.getHours(), 2) + ":" + pad(time.getMinutes(), 2) + ":" + pad(time.getSeconds(), 2) + "." + pad(time.getMilliseconds(), 3);
-	};
-
-	// Use the new performance api to get better precision if available
-	var timer = typeof performance !== "undefined" && typeof performance.now === "function" ? performance : Date;
-
-	/**
-	 * parse the level option of createLogger
-	 *
-	 * @property {string | function | object} level - console[level]
-	 * @property {object} action
-	 * @property {array} payload
-	 * @property {string} type
-	 */
-
-	function getLogLevel(level, action, payload, type) {
-	  switch (typeof level === "undefined" ? "undefined" : _typeof(level)) {
-	    case "object":
-	      return typeof level[type] === "function" ? level[type].apply(level, _toConsumableArray(payload)) : level[type];
-	    case "function":
-	      return level(action);
-	    default:
-	      return level;
-	  }
-	}
-
-	/**
-	 * Creates logger with followed options
-	 *
-	 * @namespace
-	 * @property {object} options - options for logger
-	 * @property {string | function | object} options.level - console[level]
-	 * @property {boolean} options.duration - print duration of each action?
-	 * @property {boolean} options.timestamp - print timestamp with each action?
-	 * @property {object} options.colors - custom colors
-	 * @property {object} options.logger - implementation of the `console` API
-	 * @property {boolean} options.logErrors - should errors in action execution be caught, logged, and re-thrown?
-	 * @property {boolean} options.collapsed - is group collapsed?
-	 * @property {boolean} options.predicate - condition which resolves logger behavior
-	 * @property {function} options.stateTransformer - transform state before print
-	 * @property {function} options.actionTransformer - transform action before print
-	 * @property {function} options.errorTransformer - transform error before print
-	 */
-
-	function createLogger() {
-	  var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
-	  var _options$level = options.level;
-	  var level = _options$level === undefined ? "log" : _options$level;
-	  var _options$logger = options.logger;
-	  var logger = _options$logger === undefined ? console : _options$logger;
-	  var _options$logErrors = options.logErrors;
-	  var logErrors = _options$logErrors === undefined ? true : _options$logErrors;
-	  var collapsed = options.collapsed;
-	  var predicate = options.predicate;
-	  var _options$duration = options.duration;
-	  var duration = _options$duration === undefined ? false : _options$duration;
-	  var _options$timestamp = options.timestamp;
-	  var timestamp = _options$timestamp === undefined ? true : _options$timestamp;
-	  var transformer = options.transformer;
-	  var _options$stateTransfo = options.stateTransformer;
-	  var // deprecated
-	  stateTransformer = _options$stateTransfo === undefined ? function (state) {
-	    return state;
-	  } : _options$stateTransfo;
-	  var _options$actionTransf = options.actionTransformer;
-	  var actionTransformer = _options$actionTransf === undefined ? function (actn) {
-	    return actn;
-	  } : _options$actionTransf;
-	  var _options$errorTransfo = options.errorTransformer;
-	  var errorTransformer = _options$errorTransfo === undefined ? function (error) {
-	    return error;
-	  } : _options$errorTransfo;
-	  var _options$colors = options.colors;
-	  var colors = _options$colors === undefined ? {
-	    title: function title() {
-	      return "#000000";
-	    },
-	    prevState: function prevState() {
-	      return "#9E9E9E";
-	    },
-	    action: function action() {
-	      return "#03A9F4";
-	    },
-	    nextState: function nextState() {
-	      return "#4CAF50";
-	    },
-	    error: function error() {
-	      return "#F20404";
-	    }
-	  } : _options$colors;
-
-	  // exit if console undefined
-
-	  if (typeof logger === "undefined") {
-	    return function () {
-	      return function (next) {
-	        return function (action) {
-	          return next(action);
-	        };
-	      };
-	    };
-	  }
-
-	  if (transformer) {
-	    console.error("Option 'transformer' is deprecated, use stateTransformer instead");
-	  }
-
-	  var logBuffer = [];
-	  function printBuffer() {
-	    logBuffer.forEach(function (logEntry, key) {
-	      var started = logEntry.started;
-	      var startedTime = logEntry.startedTime;
-	      var action = logEntry.action;
-	      var prevState = logEntry.prevState;
-	      var error = logEntry.error;
-	      var took = logEntry.took;
-	      var nextState = logEntry.nextState;
-
-	      var nextEntry = logBuffer[key + 1];
-	      if (nextEntry) {
-	        nextState = nextEntry.prevState;
-	        took = nextEntry.started - started;
-	      }
-	      // message
-	      var formattedAction = actionTransformer(action);
-	      var isCollapsed = typeof collapsed === "function" ? collapsed(function () {
-	        return nextState;
-	      }, action) : collapsed;
-
-	      var formattedTime = formatTime(startedTime);
-	      var titleCSS = colors.title ? "color: " + colors.title(formattedAction) + ";" : null;
-	      var title = "action " + (timestamp ? formattedTime : "") + " " + formattedAction.type + " " + (duration ? "(in " + took.toFixed(2) + " ms)" : "");
-
-	      // render
-	      try {
-	        if (isCollapsed) {
-	          if (colors.title) logger.groupCollapsed("%c " + title, titleCSS);else logger.groupCollapsed(title);
-	        } else {
-	          if (colors.title) logger.group("%c " + title, titleCSS);else logger.group(title);
-	        }
-	      } catch (e) {
-	        logger.log(title);
-	      }
-
-	      var prevStateLevel = getLogLevel(level, formattedAction, [prevState], "prevState");
-	      var actionLevel = getLogLevel(level, formattedAction, [formattedAction], "action");
-	      var errorLevel = getLogLevel(level, formattedAction, [error, prevState], "error");
-	      var nextStateLevel = getLogLevel(level, formattedAction, [nextState], "nextState");
-
-	      if (prevStateLevel) {
-	        if (colors.prevState) logger[prevStateLevel]("%c prev state", "color: " + colors.prevState(prevState) + "; font-weight: bold", prevState);else logger[prevStateLevel]("prev state", prevState);
-	      }
-
-	      if (actionLevel) {
-	        if (colors.action) logger[actionLevel]("%c action", "color: " + colors.action(formattedAction) + "; font-weight: bold", formattedAction);else logger[actionLevel]("action", formattedAction);
-	      }
-
-	      if (error && errorLevel) {
-	        if (colors.error) logger[errorLevel]("%c error", "color: " + colors.error(error, prevState) + "; font-weight: bold", error);else logger[errorLevel]("error", error);
-	      }
-
-	      if (nextStateLevel) {
-	        if (colors.nextState) logger[nextStateLevel]("%c next state", "color: " + colors.nextState(nextState) + "; font-weight: bold", nextState);else logger[nextStateLevel]("next state", nextState);
-	      }
-
-	      try {
-	        logger.groupEnd();
-	      } catch (e) {
-	        logger.log("—— log end ——");
-	      }
-	    });
-	    logBuffer.length = 0;
-	  }
-
-	  return function (_ref) {
-	    var getState = _ref.getState;
-	    return function (next) {
-	      return function (action) {
-	        // exit early if predicate function returns false
-	        if (typeof predicate === "function" && !predicate(getState, action)) {
-	          return next(action);
-	        }
-
-	        var logEntry = {};
-	        logBuffer.push(logEntry);
-
-	        logEntry.started = timer.now();
-	        logEntry.startedTime = new Date();
-	        logEntry.prevState = stateTransformer(getState());
-	        logEntry.action = action;
-
-	        var returnedValue = undefined;
-	        if (logErrors) {
-	          try {
-	            returnedValue = next(action);
-	          } catch (e) {
-	            logEntry.error = errorTransformer(e);
-	          }
-	        } else {
-	          returnedValue = next(action);
-	        }
-
-	        logEntry.took = timer.now() - logEntry.started;
-	        logEntry.nextState = stateTransformer(getState());
-
-	        printBuffer();
-
-	        if (logEntry.error) throw logEntry.error;
-	        return returnedValue;
-	      };
-	    };
-	  };
-	}
-
-	module.exports = createLogger;
-
-/***/ },
-/* 12 */
-/***/ function(module, exports) {
-
-	// setter for changing state
-
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-	var INCREMENT = function INCREMENT(state, data) {
-	    var count = state.count;
-
-	    count += 1;
-	    return _extends({}, state, {
-	        count: count
-	    });
-	};
-
-	exports.INCREMENT = INCREMENT;
-	var DECREMENT = function DECREMENT(state, data) {
-	    var count = state.count;
-
-	    count -= 1;
-	    return _extends({}, state, {
-	        count: count
-	    });
-	};
-
-	exports.DECREMENT = DECREMENT;
-	var INCREMENT_IF_ODD = function INCREMENT_IF_ODD(state, data) {
-	    var count = state.count;
-
-	    if (count % 2 !== 0) {
-	        count += 1;
-	        return _extends({}, state, {
-	            count: count
-	        });
-	    }
-	    return state;
-	};
-
-	exports.INCREMENT_IF_ODD = INCREMENT_IF_ODD;
-	var ASYNC_INCREMENT = function ASYNC_INCREMENT(state, data) {
-	    return new Promise(function (resolve, reject) {
-	        setTimeout(function () {
-	            var count = state.count;
-
-	            count += 1;
-	            resolve(_extends({}, state, {
-	                count: count
-	            }));
-	        }, 1000);
-	    });
-	};
-	exports.ASYNC_INCREMENT = ASYNC_INCREMENT;
-
-/***/ },
-/* 13 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// placeholder
@@ -1133,7 +535,7 @@
 		value: true
 	});
 
-	var _render = __webpack_require__(14);
+	var _render = __webpack_require__(7);
 
 	var Client = {
 		render: _render.render,
@@ -1144,7 +546,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 14 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1157,21 +559,21 @@
 
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-	var _shareUtil = __webpack_require__(5);
+	var _shareUtil = __webpack_require__(4);
 
 	var _ = _interopRequireWildcard(_shareUtil);
 
-	var _shareConstant = __webpack_require__(4);
+	var _shareConstant = __webpack_require__(3);
 
-	var _shareDirective = __webpack_require__(6);
+	var _shareDirective = __webpack_require__(5);
 
-	var _DOMPropertyOperations = __webpack_require__(15);
+	var _DOMPropertyOperations = __webpack_require__(8);
 
-	var _CSSPropertyOperations = __webpack_require__(16);
+	var _CSSPropertyOperations = __webpack_require__(9);
 
-	var _eventSystem = __webpack_require__(17);
+	var _eventSystem = __webpack_require__(10);
 
-	var _virtualDom = __webpack_require__(18);
+	var _virtualDom = __webpack_require__(11);
 
 	var pendingRendering = {};
 	var vnodeStore = {};
@@ -1256,7 +658,7 @@
 	}
 
 /***/ },
-/* 15 */
+/* 8 */
 /***/ function(module, exports) {
 
 	/**
@@ -1296,7 +698,7 @@
 	}
 
 /***/ },
-/* 16 */
+/* 9 */
 /***/ function(module, exports) {
 
 	/**
@@ -1338,7 +740,7 @@
 	}
 
 /***/ },
-/* 17 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1350,7 +752,7 @@
 
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-	var _shareUtil = __webpack_require__(5);
+	var _shareUtil = __webpack_require__(4);
 
 	var _ = _interopRequireWildcard(_shareUtil);
 
@@ -1502,7 +904,7 @@
 	}
 
 /***/ },
-/* 18 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1516,15 +918,15 @@
 
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-	var _eventSystem = __webpack_require__(17);
+	var _eventSystem = __webpack_require__(10);
 
-	var _shareUtil = __webpack_require__(5);
+	var _shareUtil = __webpack_require__(4);
 
 	var _ = _interopRequireWildcard(_shareUtil);
 
-	var _shareDirective = __webpack_require__(6);
+	var _shareDirective = __webpack_require__(5);
 
-	var _shareConstant = __webpack_require__(4);
+	var _shareConstant = __webpack_require__(3);
 
 	function initVnode(vnode, context, namespaceURI) {
 	    var vtype = vnode.vtype;
@@ -1910,6 +1312,404 @@
 	    }
 	    return newNode;
 	}
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+		value: true
+	});
+	exports['default'] = CounterUI;
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var _vdomEngineShare = __webpack_require__(1);
+
+	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
+
+	function CounterUI(_ref) {
+		var count = _ref.count;
+		var INCREMENT = _ref.INCREMENT;
+		var DECREMENT = _ref.DECREMENT;
+		var INCREMENT_IF_ODD = _ref.INCREMENT_IF_ODD;
+		var ASYNC_INCREMENT = _ref.ASYNC_INCREMENT;
+
+		return _vdomEngineShare2['default'].createElement(
+			'p',
+			null,
+			'Clicked: ',
+			_vdomEngineShare2['default'].createElement(
+				'span',
+				null,
+				count
+			),
+			' times',
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-click': INCREMENT },
+				'+'
+			),
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-click': DECREMENT },
+				'-'
+			),
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-click': INCREMENT_IF_ODD },
+				'Increment if odd'
+			),
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-click': ASYNC_INCREMENT },
+				'Increment async'
+			),
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-dblclick': INCREMENT },
+				'Increment by dblclick'
+			),
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-mousemove': DECREMENT },
+				'Decrement by mousemove'
+			)
+		);
+	}
+
+	module.exports = exports['default'];
+
+/***/ },
+/* 13 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+		value: true
+	});
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
+
+	var _vdomEngineStore = __webpack_require__(14);
+
+	var _setter = __webpack_require__(17);
+
+	var setter = _interopRequireWildcard(_setter);
+
+	var initialState = {
+		count: 10
+	};
+	var settings = {
+		name: 'counter',
+		setter: setter
+	};
+	var store = (0, _vdomEngineStore.createStore)(settings, initialState);
+
+	exports['default'] = store;
+	module.exports = exports['default'];
+
+/***/ },
+/* 14 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// store
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+		value: true
+	});
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var _createStore = __webpack_require__(15);
+
+	var _createStore2 = _interopRequireDefault(_createStore);
+
+	var Store = {
+		createStore: _createStore2['default']
+	};
+
+	exports['default'] = Store;
+	module.exports = exports['default'];
+
+/***/ },
+/* 15 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+		value: true
+	});
+	exports['default'] = createStore;
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
+
+	var _shareUtil = __webpack_require__(4);
+
+	var _ = _interopRequireWildcard(_shareUtil);
+
+	var _createLogger = __webpack_require__(16);
+
+	var _createLogger2 = _interopRequireDefault(_createLogger);
+
+	function createStore(settings, initialState) {
+		var getter = settings.getter;
+		var setter = settings.setter;
+		var name = settings.name;
+		var debug = settings.debug;
+
+		var logger = null;
+
+		if (debug !== false) {
+			logger = (0, _createLogger2['default'])(name);
+		}
+
+		var currentState = initialState;
+		var listeners = [];
+
+		var store = {
+			logger: logger,
+			setter: setter,
+			getter: getter,
+			getState: getState,
+			replaceState: replaceState,
+			search: search,
+			dispatch: dispatch,
+			subscribe: subscribe
+		};
+
+		if (setter) {
+			store.actions = Object.keys(setter).reduce(function (actions, key) {
+				actions[key] = function (data) {
+					logger && logger.start(key);
+					var prevState = currentState;
+					var nextState = currentState;
+					var logEnd = function logEnd(nextState) {
+						logger && logger.end(key, data, prevState, nextState);
+					};
+					try {
+						nextState = dispatch(key, data);
+					} catch (error) {
+						logEnd(error);
+						return nextState;
+					}
+					if (_.isThenable(nextState)) {
+						return nextState.then(logEnd, logEnd);
+					}
+					logEnd(nextState);
+					return nextState;
+				};
+				return actions;
+			}, {});
+		}
+
+		if (getter) {
+			store.selectors = Object.keys(getter).reduce(function (selectors, key) {
+				selectors[key] = search.bind(null, key);
+				return selectors;
+			});
+		}
+
+		return store;
+
+		function subscribe(listener) {
+			var index = listeners.indexOf(listener);
+			if (index === -1) {
+				listeners.push(listener);
+			}
+			return function () {
+				var index = listeners.indexOf(listener);
+				if (index !== -1) {
+					listeners.splice(i, 1);
+				}
+			};
+		}
+
+		function getState() {
+			return currentState;
+		}
+
+		function replaceState(nextState, silent) {
+			currentState = nextState;
+			if (!silent) {
+				listeners.forEach(_.invoke);
+			}
+			return currentState;
+		}
+
+		function dispatch(type, data) {
+			var currentSetter = setter[type];
+			if (!_.isFn(currentSetter)) {
+				throw new Error('Expected a function which is ' + currentSetter);
+			}
+			var nextState = currentSetter(currentState, data);
+			if (_.isThenable(nextState)) {
+				return nextState.then(replaceState);
+			}
+			if (currentState !== nextState) {
+				replaceState(nextState);
+			}
+			return currentState;
+		}
+
+		function search(type, query) {
+			var currentGetter = getter(type);
+			if (!_.isFn(currentGetter)) {
+				throw new Error('Expected a function which is ' + currentGetter);
+			}
+			var result = currentGetter(currentState, query);
+			return result;
+		}
+	}
+
+	module.exports = exports['default'];
+
+/***/ },
+/* 16 */
+/***/ function(module, exports) {
+
+	// createLogger
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+	exports['default'] = createLogger;
+	var attr = 'info' in console ? 'info' : "log";
+	var pad = function pad(num) {
+	    return ('0' + num).slice(-2);
+	};
+	var getTime = typeof performance !== 'undefined' && performance.now ? function () {
+	    return performance.now();
+	} : function () {
+	    return new Date().getTime();
+	};
+
+	function createLogger(options) {
+	    var _options$name = options.name;
+	    var name = _options$name === undefined ? 'store' : _options$name;
+
+	    var timeStore = {};
+
+	    return {
+	        start: start,
+	        end: end
+	    };
+
+	    function start(key) {
+	        timeStore[key] = getTime();
+	    }
+
+	    function end(key, data, prevState, nextState) {
+	        var time = new Date();
+	        var formattedTime = time.getHours() + ':' + pad(time.getMinutes()) + ':' + pad(time.getSeconds());
+	        var takeTime = (getTime() - timeStore[key]).toFixed(2);
+	        var message = name + '-' + (prevState === nextState ? 'equal' : 'diff') + ': action [' + key + '] end at ' + formattedTime + ', take ' + takeTime + 'ms';
+
+	        try {
+	            console.groupCollapsed(message);
+	        } catch (e) {
+	            try {
+	                console.group(message);
+	            } catch (e) {
+	                console.log(message);
+	            }
+	        }
+
+	        if (attr === 'log') {
+	            console[attr](data);
+	            console[attr](prevState);
+	            console[attr](nextState);
+	        } else {
+	            var isError = nextState instanceof Error;
+	            console[attr]('%c data', 'color: #03A9F4; font-weight: bold', data);
+	            console[attr]('%c prev state', 'color: #9E9E9E; font-weight: bold', prevState);
+	            console[attr]('%c ' + (isError ? 'error' : 'next state'), 'color: #4CAF50; font-weight: bold', nextState);
+	        }
+
+	        try {
+	            console.groupEnd();
+	        } catch (e) {
+	            console.log('-- log end --');
+	        }
+	    }
+	}
+
+	module.exports = exports['default'];
+
+/***/ },
+/* 17 */
+/***/ function(module, exports) {
+
+	// setter for changing state
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+	var INCREMENT = function INCREMENT(state, data) {
+	    var count = state.count;
+
+	    count += 1;
+	    return _extends({}, state, {
+	        count: count
+	    });
+	};
+
+	exports.INCREMENT = INCREMENT;
+	var DECREMENT = function DECREMENT(state, data) {
+	    var count = state.count;
+
+	    count -= 1;
+	    return _extends({}, state, {
+	        count: count
+	    });
+	};
+
+	exports.DECREMENT = DECREMENT;
+	var INCREMENT_IF_ODD = function INCREMENT_IF_ODD(state, data) {
+	    var count = state.count;
+
+	    if (count % 2 !== 0) {
+	        count += 1;
+	        return _extends({}, state, {
+	            count: count
+	        });
+	    }
+	    return state;
+	};
+
+	exports.INCREMENT_IF_ODD = INCREMENT_IF_ODD;
+	var ASYNC_INCREMENT = function ASYNC_INCREMENT(state, data) {
+	    return new Promise(function (resolve, reject) {
+	        setTimeout(function () {
+	            var count = state.count;
+
+	            count += 1;
+	            resolve(_extends({}, state, {
+	                count: count
+	            }));
+	        }, 1000);
+	    });
+	};
+	exports.ASYNC_INCREMENT = ASYNC_INCREMENT;
 
 /***/ }
 /******/ ]);
