@@ -96,7 +96,11 @@ function isFn(obj) {
 }
 
 function isThenable(obj) {
-    return obj != null && isFn(obj);
+    return obj != null && isFn(obj.then);
+}
+
+function invoke(fn) {
+    return fn();
 }
 
 var isArr = Array.isArray;
@@ -1162,20 +1166,122 @@ var Router = {
 	createMatcher: createMatcher
 };
 
-function createStore(accessor, initialState) {
-	var getter = accessor.getter;
-	var setter = accessor.setter;
+var attr = 'info' in console ? 'info' : "log";
+var pad = function pad(num) {
+    return ('0' + num).slice(-2);
+};
+var getTime = typeof performance !== 'undefined' && performance.now ? function () {
+    return performance.now();
+} : function () {
+    return new Date().getTime();
+};
+function createLogger(options) {
+    var _options$name = options.name;
+    var name = _options$name === undefined ? 'store' : _options$name;
+
+    var timeStore = {};
+
+    return {
+        start: start,
+        end: end
+    };
+
+    function start(key) {
+        timeStore[key] = getTime();
+    }
+
+    function end(key, data, prevState, nextState) {
+        var time = new Date();
+        var formattedTime = time.getHours() + ':' + pad(time.getMinutes()) + ':' + pad(time.getSeconds());
+        var takeTime = (getTime() - timeStore[key]).toFixed(2);
+        var message = name + '-' + (prevState === nextState ? 'equal' : 'diff') + ': action [' + key + '] end at ' + formattedTime + ', take ' + takeTime + 'ms';
+
+        try {
+            console.groupCollapsed(message);
+        } catch (e) {
+            try {
+                console.group(message);
+            } catch (e) {
+                console.log(message);
+            }
+        }
+
+        if (attr === 'log') {
+            console[attr](data);
+            console[attr](prevState);
+            console[attr](nextState);
+        } else {
+            var isError = nextState instanceof Error;
+            console[attr]('%c data', 'color: #03A9F4; font-weight: bold', data);
+            console[attr]('%c prev state', 'color: #9E9E9E; font-weight: bold', prevState);
+            console[attr]('%c ' + (isError ? 'error' : 'next state'), 'color: #4CAF50; font-weight: bold', nextState);
+        }
+
+        try {
+            console.groupEnd();
+        } catch (e) {
+            console.log('-- log end --');
+        }
+    }
+}
+
+function createStore(settings, initialState) {
+	var getter = settings.getter;
+	var setter = settings.setter;
+	var name = settings.name;
+	var debug = settings.debug;
+
+	var logger = null;
+
+	if (debug !== false) {
+		logger = createLogger(name);
+	}
 
 	var currentState = initialState;
 	var listeners = [];
 
 	var store = {
+		logger: logger,
+		setter: setter,
+		getter: getter,
 		getState: getState,
-		setState: setState,
-		setBy: setBy,
-		getBy: getBy,
+		replaceState: replaceState,
+		search: search,
+		dispatch: dispatch,
 		subscribe: subscribe
 	};
+
+	if (setter) {
+		store.actions = Object.keys(setter).reduce(function (actions, key) {
+			actions[key] = function (data) {
+				logger && logger.start(key);
+				var prevState = currentState;
+				var nextState = currentState;
+				var logEnd = function logEnd(nextState) {
+					logger && logger.end(key, data, prevState, nextState);
+				};
+				try {
+					nextState = dispatch(key, data);
+				} catch (error) {
+					logEnd(error);
+					return nextState;
+				}
+				if (isThenable(nextState)) {
+					return nextState.then(logEnd, logEnd);
+				}
+				logEnd(nextState);
+				return nextState;
+			};
+			return actions;
+		}, {});
+	}
+
+	if (getter) {
+		store.selectors = Object.keys(getter).reduce(function (selectors, key) {
+			selectors[key] = search.bind(null, key);
+			return selectors;
+		});
+	}
 
 	return store;
 
@@ -1196,7 +1302,7 @@ function createStore(accessor, initialState) {
 		return currentState;
 	}
 
-	function setState(nextState, silent) {
+	function replaceState(nextState, silent) {
 		currentState = nextState;
 		if (!silent) {
 			listeners.forEach(invoke);
@@ -1204,33 +1310,29 @@ function createStore(accessor, initialState) {
 		return currentState;
 	}
 
-	function setBy(setterName, data) {
-		var currentSetter = setter[setterName];
+	function dispatch(type, data) {
+		var currentSetter = setter[type];
 		if (!isFn(currentSetter)) {
-			throw new Error('Expected ' + setterName + ' in setter to be a function which is ' + currentSetter);
+			throw new Error('Expected a function which is ' + currentSetter);
 		}
-		var nextState = currentSetter(currentSetter, data);
+		var nextState = currentSetter(currentState, data);
 		if (isThenable(nextState)) {
-			return nextState.then(setState);
+			return nextState.then(replaceState);
 		}
 		if (currentState !== nextState) {
-			setState(nextState);
+			replaceState(nextState);
 		}
 		return currentState;
 	}
 
-	function getBy(getterName, data) {
-		var currentGetter = getter(getterName);
+	function search(type, query) {
+		var currentGetter = getter(type);
 		if (!isFn(currentGetter)) {
-			throw new Error('Expected ' + getterName + ' in setter to be a function which is ' + currentGetter);
+			throw new Error('Expected a function which is ' + currentGetter);
 		}
-		var result = currentGetter(currentState, data);
+		var result = currentGetter(currentState, query);
 		return result;
 	}
-}
-
-function invoke(fn) {
-	return fn();
 }
 
 var Store = {
