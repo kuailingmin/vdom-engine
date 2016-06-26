@@ -1,4 +1,4 @@
-import { createStore } from 'vdom-engine/store'
+import { createStore } from 'vdom-engine/share'
 import * as setter from './setter'
 
 let initialState = {
@@ -7,7 +7,8 @@ let initialState = {
 let settings = {
 	name: 'counter',
 	setter,
+	initialState,
 }
-let store = createStore(settings, initialState)
+let store = createStore(settings)
 
 export default store

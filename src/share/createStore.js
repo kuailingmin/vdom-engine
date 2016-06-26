@@ -1,8 +1,8 @@
-import * as _ from '../share/util'
+import * as _ from './util'
 import createLogger from './createLogger'
 
-export default function createStore(settings, initialState) {
-	let { getter, setter, name, debug } = settings
+export default function createStore(settings) {
+	let { getter, setter, name, debug, initialState } = settings
 	let logger = null
 
 	if (debug !== false) {
@@ -13,9 +13,6 @@ export default function createStore(settings, initialState) {
 	let listeners = []
 
 	let store = {
-		logger,
-		setter,
-		getter,
 		getState,
 		replaceState,
 		search,
@@ -25,13 +22,15 @@ export default function createStore(settings, initialState) {
 
 	if (setter) {
 		store.actions = Object.keys(setter).reduce((actions, key) => {
+			let count = 0
 			actions[key] = data => {
-				logger && logger.start(key)
+				let finalKey = `${key}*${count++}`
 				let prevState = currentState
 				let nextState = currentState
 				let logEnd = nextState => {
-					logger && logger.end(key, data, prevState, nextState)
+					logger && logger.end(finalKey, data, prevState, nextState)
 				}
+				logger && logger.start(finalKey)
 				try {
 					nextState = dispatch(key, data)
 				} catch (error) {
@@ -46,7 +45,6 @@ export default function createStore(settings, initialState) {
 			}
 			return actions
 		}, {})
-
 	}
 
 	if (getter) {
@@ -99,7 +97,7 @@ export default function createStore(settings, initialState) {
 	}
 
 	function search(type, query) {
-		let currentGetter = getter(type)
+		let currentGetter = getter[type]
 		if (!_.isFn(currentGetter)) {
 			throw new Error(`Expected a function which is ${currentGetter}`)
 		}

@@ -1,4 +1,4 @@
-import * as _ from '../share/util'
+import * as _ from './util'
 import pathToRegexp from 'path-to-regexp'
 import querystring from 'querystring'
 

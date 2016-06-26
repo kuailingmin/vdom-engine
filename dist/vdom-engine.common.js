@@ -10,85 +10,6 @@ pathToRegexp = 'default' in pathToRegexp ? pathToRegexp['default'] : pathToRegex
 var querystring = require('querystring');
 querystring = 'default' in querystring ? querystring['default'] : querystring;
 
-var directives = {};
-var DIRECTIVE_SPEC = /^([^-]+)-(.+)$/;
-
-function addDirective(name, configs) {
-    directives[name] = configs;
-}
-
-function removeDirective(name) {
-    delete directives[name];
-}
-
-var currentName = null;
-
-function matchDirective(propKey) {
-    var matches = propKey.match(DIRECTIVE_SPEC);
-    if (matches) {
-        currentName = matches[2];
-        return directives[matches[1]];
-    }
-}
-
-function attachProp(elem, propKey, propValue) {
-    var directive = matchDirective(propKey);
-    if (directive) {
-        directive.attach(elem, currentName, propValue);
-    }
-}
-
-function detachProp(elem, propKey) {
-    var directive = matchDirective(propKey);
-    if (directive) {
-        directive.detach(elem, currentName);
-    }
-}
-
-function attachProps(elem, props) {
-    for (var propKey in props) {
-        if (propKey !== 'children' && props[propKey] != null) {
-            attachProp(elem, propKey, props[propKey]);
-        }
-    }
-}
-
-function patchProps(elem, props, newProps) {
-    for (var propKey in props) {
-        if (propKey === 'children') {
-            continue;
-        }
-        var newValue = newProps[propKey];
-        if (newValue !== props[propKey]) {
-            if (newValue == null) {
-                detachProp(elem, propKey);
-            } else {
-                attachProp(elem, propKey, newValue);
-            }
-        }
-    }
-    for (var propKey in newProps) {
-        if (propKey === 'children') {
-            continue;
-        }
-        if (!(propKey in props)) {
-            attachProp(elem, propKey, newProps[propKey]);
-        }
-    }
-}
-
-var SVGNamespaceURI = 'http://www.w3.org/2000/svg';
-var COMPONENT_ID = 'liteid';
-var VELEMENT = 1;
-var VSTATELESS = 2;
-var VCOMMENT$1 = 3;
-var HTML_KEY = 'prop-innerHTML';
-var HOOK_WILL_MOUNT = 'hook-willMount';
-var HOOK_DID_MOUNT = 'hook-didMount';
-var HOOK_WILL_UPDATE = 'hook-willUpdate';
-var HOOK_DID_UPDATE = 'hook-didUpdate';
-var HOOK_WILL_UNMOUNT = 'hook-willUnmount';
-
 var emptyList = [];
 
 function isFn(obj) {
@@ -233,6 +154,304 @@ if (!Object.freeze) {
     Object.freeze = identity;
 }
 
+var attr = 'info' in console ? 'info' : "log";
+var pad = function pad(num) {
+    return ('0' + num).slice(-2);
+};
+var getTime = typeof performance !== 'undefined' && performance.now ? function () {
+    return performance.now();
+} : function () {
+    return new Date().getTime();
+};
+function createLogger(options) {
+    var _options$name = options.name;
+    var name = _options$name === undefined ? 'store' : _options$name;
+
+    var timeStore = {};
+
+    return {
+        start: start,
+        end: end
+    };
+
+    function start(key) {
+        timeStore[key] = getTime();
+    }
+
+    function end(key, data, prevState, nextState) {
+        var time = new Date();
+        var formattedTime = time.getHours() + ':' + pad(time.getMinutes()) + ':' + pad(time.getSeconds());
+        var takeTime = (getTime() - timeStore[key]).toFixed(2);
+        var message = name + '-' + (prevState === nextState ? 'equal' : 'diff') + ': action [' + key + '] end at ' + formattedTime + ', take ' + takeTime + 'ms';
+
+        try {
+            console.groupCollapsed(message);
+        } catch (e) {
+            try {
+                console.group(message);
+            } catch (e) {
+                console.log(message);
+            }
+        }
+
+        if (attr === 'log') {
+            console[attr](data);
+            console[attr](prevState);
+            console[attr](nextState);
+        } else {
+            var isError = nextState instanceof Error;
+            console[attr]('%c data', 'color: #03A9F4; font-weight: bold', data);
+            console[attr]('%c prev state', 'color: #9E9E9E; font-weight: bold', prevState);
+            console[attr]('%c ' + (isError ? 'error' : 'next state'), 'color: #4CAF50; font-weight: bold', nextState);
+        }
+
+        try {
+            console.groupEnd();
+        } catch (e) {
+            console.log('-- log end --');
+        }
+    }
+}
+
+function createStore(settings) {
+	var getter = settings.getter;
+	var setter = settings.setter;
+	var name = settings.name;
+	var debug = settings.debug;
+	var initialState = settings.initialState;
+
+	var logger = null;
+
+	if (debug !== false) {
+		logger = createLogger(name);
+	}
+
+	var currentState = initialState;
+	var listeners = [];
+
+	var store = {
+		getState: getState,
+		replaceState: replaceState,
+		search: search,
+		dispatch: dispatch,
+		subscribe: subscribe
+	};
+
+	if (setter) {
+		store.actions = Object.keys(setter).reduce(function (actions, key) {
+			var count = 0;
+			actions[key] = function (data) {
+				var finalKey = key + '*' + count++;
+				var prevState = currentState;
+				var nextState = currentState;
+				var logEnd = function logEnd(nextState) {
+					logger && logger.end(finalKey, data, prevState, nextState);
+				};
+				logger && logger.start(finalKey);
+				try {
+					nextState = dispatch(key, data);
+				} catch (error) {
+					logEnd(error);
+					return nextState;
+				}
+				if (isThenable(nextState)) {
+					return nextState.then(logEnd, logEnd);
+				}
+				logEnd(nextState);
+				return nextState;
+			};
+			return actions;
+		}, {});
+	}
+
+	if (getter) {
+		store.selectors = Object.keys(getter).reduce(function (selectors, key) {
+			selectors[key] = search.bind(null, key);
+			return selectors;
+		});
+	}
+
+	return store;
+
+	function subscribe(listener) {
+		var index = listeners.indexOf(listener);
+		if (index === -1) {
+			listeners.push(listener);
+		}
+		return function () {
+			var index = listeners.indexOf(listener);
+			if (index !== -1) {
+				listeners.splice(i, 1);
+			}
+		};
+	}
+
+	function getState() {
+		return currentState;
+	}
+
+	function replaceState(nextState, silent) {
+		currentState = nextState;
+		if (!silent) {
+			listeners.forEach(invoke);
+		}
+		return currentState;
+	}
+
+	function dispatch(type, data) {
+		var currentSetter = setter[type];
+		if (!isFn(currentSetter)) {
+			throw new Error('Expected a function which is ' + currentSetter);
+		}
+		var nextState = currentSetter(currentState, data);
+		if (isThenable(nextState)) {
+			return nextState.then(replaceState);
+		}
+		if (currentState !== nextState) {
+			replaceState(nextState);
+		}
+		return currentState;
+	}
+
+	function search(type, query) {
+		var currentGetter = getter[type];
+		if (!isFn(currentGetter)) {
+			throw new Error('Expected a function which is ' + currentGetter);
+		}
+		var result = currentGetter(currentState, query);
+		return result;
+	}
+}
+
+var createMatcher = function createMatcher(routes) {
+    return function (location, data) {
+        var state = extend({}, location);
+        var pathname = cleanPath(state.pathname);
+        var search = cleanSearch(state.search);
+        var params = state.params = {};
+        state.query = querystring.parse(search);
+        for (var pattern in routes) {
+            var isMatched = matchPath(pattern, pathname, params);
+            var handler = routes[pattern];
+            if (isMatched && isFn(handler)) {
+                handler(params, data);
+                break;
+            }
+        }
+        return state;
+    };
+};
+
+function matchPath(path, pathname, params) {
+    var keys = [];
+    var regexp = pathToRegexp(path, keys);
+    var matches = regexp.exec(pathname);
+
+    if (!matches) {
+        return false;
+    }
+
+    for (var i = 1, len = matches.length; i < len; i++) {
+        var key = keys[i - 1];
+        if (key) {
+            if (typeof matches[i] === 'string') {
+                params[key.name] = decodeURIComponent(matches[i]);
+            } else {
+                params[key.name] = matches[i];
+            }
+        }
+    }
+
+    return true;
+}
+
+function cleanSearch(search) {
+    return search[0] === '?' ? search.substr(1) : search;
+}
+
+function cleanPath(path) {
+    return path.replace(/\/\//g, '/');
+}
+
+var directives = {};
+var DIRECTIVE_SPEC = /^([^-]+)-(.+)$/;
+
+function addDirective(name, configs) {
+    directives[name] = configs;
+}
+
+function removeDirective(name) {
+    delete directives[name];
+}
+
+var currentName = null;
+
+function matchDirective(propKey) {
+    var matches = propKey.match(DIRECTIVE_SPEC);
+    if (matches) {
+        currentName = matches[2];
+        return directives[matches[1]];
+    }
+}
+
+function attachProp(elem, propKey, propValue) {
+    var directive = matchDirective(propKey);
+    if (directive) {
+        directive.attach(elem, currentName, propValue);
+    }
+}
+
+function detachProp(elem, propKey) {
+    var directive = matchDirective(propKey);
+    if (directive) {
+        directive.detach(elem, currentName);
+    }
+}
+
+function attachProps(elem, props) {
+    for (var propKey in props) {
+        if (propKey !== 'children' && props[propKey] != null) {
+            attachProp(elem, propKey, props[propKey]);
+        }
+    }
+}
+
+function patchProps(elem, props, newProps) {
+    for (var propKey in props) {
+        if (propKey === 'children') {
+            continue;
+        }
+        var newValue = newProps[propKey];
+        if (newValue !== props[propKey]) {
+            if (newValue == null) {
+                detachProp(elem, propKey);
+            } else {
+                attachProp(elem, propKey, newValue);
+            }
+        }
+    }
+    for (var propKey in newProps) {
+        if (propKey === 'children') {
+            continue;
+        }
+        if (!(propKey in props)) {
+            attachProp(elem, propKey, newProps[propKey]);
+        }
+    }
+}
+
+var SVGNamespaceURI = 'http://www.w3.org/2000/svg';
+var COMPONENT_ID = 'liteid';
+var VELEMENT = 1;
+var VSTATELESS = 2;
+var VCOMMENT$1 = 3;
+var HTML_KEY = 'prop-innerHTML';
+var HOOK_WILL_MOUNT = 'hook-willMount';
+var HOOK_DID_MOUNT = 'hook-didMount';
+var HOOK_WILL_UPDATE = 'hook-willUpdate';
+var HOOK_DID_UPDATE = 'hook-didUpdate';
+var HOOK_WILL_UNMOUNT = 'hook-willUnmount';
+
 function createElement(type, props) /* ...children */{
 	var finalProps = {};
 	var key = null;
@@ -324,7 +543,9 @@ var Share = {
 	createFactory: createFactory,
 	isValidElement: isValidElement,
 	addDirective: addDirective,
-	removeDirective: removeDirective
+	removeDirective: removeDirective,
+	createMatcher: createMatcher,
+	createStore: createStore
 };
 
 var DOMPropDirective = {
@@ -1112,238 +1333,9 @@ var Server = {
 	renderToString: renderToString
 };
 
-var createMatcher = function createMatcher(routes) {
-    return function (location, data) {
-        var state = extend({}, location);
-        var pathname = cleanPath(state.pathname);
-        var search = cleanSearch(state.search);
-        var params = state.params = {};
-        state.query = querystring.parse(search);
-        for (var pattern in routes) {
-            var isMatched = matchPath(pattern, pathname, params);
-            var handler = routes[pattern];
-            if (isMatched && isFn(handler)) {
-                handler(params, data);
-                break;
-            }
-        }
-        return state;
-    };
-};
-
-function matchPath(path, pathname, params) {
-    var keys = [];
-    var regexp = pathToRegexp(path, keys);
-    var matches = regexp.exec(pathname);
-
-    if (!matches) {
-        return false;
-    }
-
-    for (var i = 1, len = matches.length; i < len; i++) {
-        var key = keys[i - 1];
-        if (key) {
-            if (typeof matches[i] === 'string') {
-                params[key.name] = decodeURIComponent(matches[i]);
-            } else {
-                params[key.name] = matches[i];
-            }
-        }
-    }
-
-    return true;
-}
-
-function cleanSearch(search) {
-    return search[0] === '?' ? search.substr(1) : search;
-}
-
-function cleanPath(path) {
-    return path.replace(/\/\//g, '/');
-}
-
-var Router = {
-	createMatcher: createMatcher
-};
-
-var attr = 'info' in console ? 'info' : "log";
-var pad = function pad(num) {
-    return ('0' + num).slice(-2);
-};
-var getTime = typeof performance !== 'undefined' && performance.now ? function () {
-    return performance.now();
-} : function () {
-    return new Date().getTime();
-};
-function createLogger(options) {
-    var _options$name = options.name;
-    var name = _options$name === undefined ? 'store' : _options$name;
-
-    var timeStore = {};
-
-    return {
-        start: start,
-        end: end
-    };
-
-    function start(key) {
-        timeStore[key] = getTime();
-    }
-
-    function end(key, data, prevState, nextState) {
-        var time = new Date();
-        var formattedTime = time.getHours() + ':' + pad(time.getMinutes()) + ':' + pad(time.getSeconds());
-        var takeTime = (getTime() - timeStore[key]).toFixed(2);
-        var message = name + '-' + (prevState === nextState ? 'equal' : 'diff') + ': action [' + key + '] end at ' + formattedTime + ', take ' + takeTime + 'ms';
-
-        try {
-            console.groupCollapsed(message);
-        } catch (e) {
-            try {
-                console.group(message);
-            } catch (e) {
-                console.log(message);
-            }
-        }
-
-        if (attr === 'log') {
-            console[attr](data);
-            console[attr](prevState);
-            console[attr](nextState);
-        } else {
-            var isError = nextState instanceof Error;
-            console[attr]('%c data', 'color: #03A9F4; font-weight: bold', data);
-            console[attr]('%c prev state', 'color: #9E9E9E; font-weight: bold', prevState);
-            console[attr]('%c ' + (isError ? 'error' : 'next state'), 'color: #4CAF50; font-weight: bold', nextState);
-        }
-
-        try {
-            console.groupEnd();
-        } catch (e) {
-            console.log('-- log end --');
-        }
-    }
-}
-
-function createStore(settings, initialState) {
-	var getter = settings.getter;
-	var setter = settings.setter;
-	var name = settings.name;
-	var debug = settings.debug;
-
-	var logger = null;
-
-	if (debug !== false) {
-		logger = createLogger(name);
-	}
-
-	var currentState = initialState;
-	var listeners = [];
-
-	var store = {
-		logger: logger,
-		setter: setter,
-		getter: getter,
-		getState: getState,
-		replaceState: replaceState,
-		search: search,
-		dispatch: dispatch,
-		subscribe: subscribe
-	};
-
-	if (setter) {
-		store.actions = Object.keys(setter).reduce(function (actions, key) {
-			actions[key] = function (data) {
-				logger && logger.start(key);
-				var prevState = currentState;
-				var nextState = currentState;
-				var logEnd = function logEnd(nextState) {
-					logger && logger.end(key, data, prevState, nextState);
-				};
-				try {
-					nextState = dispatch(key, data);
-				} catch (error) {
-					logEnd(error);
-					return nextState;
-				}
-				if (isThenable(nextState)) {
-					return nextState.then(logEnd, logEnd);
-				}
-				logEnd(nextState);
-				return nextState;
-			};
-			return actions;
-		}, {});
-	}
-
-	if (getter) {
-		store.selectors = Object.keys(getter).reduce(function (selectors, key) {
-			selectors[key] = search.bind(null, key);
-			return selectors;
-		});
-	}
-
-	return store;
-
-	function subscribe(listener) {
-		var index = listeners.indexOf(listener);
-		if (index === -1) {
-			listeners.push(listener);
-		}
-		return function () {
-			var index = listeners.indexOf(listener);
-			if (index !== -1) {
-				listeners.splice(i, 1);
-			}
-		};
-	}
-
-	function getState() {
-		return currentState;
-	}
-
-	function replaceState(nextState, silent) {
-		currentState = nextState;
-		if (!silent) {
-			listeners.forEach(invoke);
-		}
-		return currentState;
-	}
-
-	function dispatch(type, data) {
-		var currentSetter = setter[type];
-		if (!isFn(currentSetter)) {
-			throw new Error('Expected a function which is ' + currentSetter);
-		}
-		var nextState = currentSetter(currentState, data);
-		if (isThenable(nextState)) {
-			return nextState.then(replaceState);
-		}
-		if (currentState !== nextState) {
-			replaceState(nextState);
-		}
-		return currentState;
-	}
-
-	function search(type, query) {
-		var currentGetter = getter(type);
-		if (!isFn(currentGetter)) {
-			throw new Error('Expected a function which is ' + currentGetter);
-		}
-		var result = currentGetter(currentState, query);
-		return result;
-	}
-}
-
-var Store = {
-	createStore: createStore
-};
-
 var VdomEngine = {};
 extend(VdomEngine, Share);
 extend(VdomEngine, Client);
 extend(VdomEngine, Server);
-extend(VdomEngine, Router);
-extend(VdomEngine, Store);
 
 module.exports = VdomEngine;
