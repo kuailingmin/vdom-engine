@@ -1,47 +1,53 @@
-import * as _ from './util'
 import pathToRegexp from 'path-to-regexp'
 import querystring from 'querystring'
+import * as _ from './util'
 
-let createMatcher = routes => (location, data) => {
-    let state = _.extend({}, location)
+let createMatcher = routes => (location, state) => {
+    _.extend(state, location)
     let pathname = cleanPath(state.pathname)
-    let search = cleanSearch(state.search)
-    let params = state.params = {}
-    state.query = querystring.parse(search)
+    let query = querystring.parse(cleanSearch(state.search))
+    let matchResult = null
+    state.query = query
     for (let pattern in routes) {
-        let isMatched = matchPath(pattern, pathname, params)
-        let handler = routes[pattern]
-        if (isMatched && _.isFn(handler)) {
-            handler(params, data)
+        let result = matchPath(pattern, pathname)
+        if (result) {
+            matchResult = result
+            matchResult.pattern = pattern
             break
         }
     }
-    return state
+    if (matchResult) {
+        let Controller = routes[matchResult.pattern]
+        let params = getParams(matchResult)
+        state.params = params
+        return Controller
+    }
 }
 
 export default createMatcher
 
-function matchPath(path, pathname, params) {
+function matchPath(pathPattern, pathname) {
     let keys = []
-    let regexp = pathToRegexp(path, keys)
+    let regexp = pathToRegexp(pathPattern, keys)
     let matches = regexp.exec(pathname)
-
-    if (!matches) {
-    	return false
+    if (matches) {
+        return { matches, keys }
     }
+}
 
+function getParams({ matches, keys }) {
+    let params = {}
     for (let i = 1, len = matches.length; i < len; i++) {
         let key = keys[i - 1]
         if (key) {
-        	if (typeof matches[i] === 'string') {
-        		params[key.name] = decodeURIComponent(matches[i])
-        	} else {
-        		params[key.name] = matches[i]
-        	}
+            if (typeof matches[i] === 'string') {
+                params[key.name] = decodeURIComponent(matches[i])
+            } else {
+                params[key.name] = matches[i]
+            }
         }
     }
-
-    return true
+    return params
 }
 
 function cleanSearch(search) {
@@ -49,5 +55,5 @@ function cleanSearch(search) {
 }
 
 function cleanPath(path) {
-  return path.replace(/\/\//g, '/')
+    return path.replace(/\/\//g, '/')
 }

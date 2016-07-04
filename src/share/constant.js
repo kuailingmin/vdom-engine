@@ -12,3 +12,5 @@ export const HOOK_DID_MOUNT = 'hook-didMount'
 export const HOOK_WILL_UPDATE = 'hook-willUpdate'
 export const HOOK_DID_UPDATE = 'hook-didUpdate'
 export const HOOK_WILL_UNMOUNT = 'hook-willUnmount'
+export const isClient = typeof window !== 'undefined'
+export const isServer = !isClient
