@@ -8,43 +8,65 @@ export default class App {
 		let { routes } = this
 		this.matcher = createMatcher(routes)
 		this.initController = this.initController.bind(this)
-	}
-	getState(needNewState) {
-		if (needNewState) {
-			this.state = _.extend({}, this.state)
-		}
-		return this.state
+		this.goTo = this.goTo.bind(this)
+		this.handleEvent = this.handleEvent.bind(this)
 	}
 	handleEvent() {
-		let { matcher } = this
-		let state = this.getState(true)
-		let Controller = matcher(location, state)
+		let { loader, matcher, initController } = this
+		let state = this.getState()
+		let Controller = matcher(state)
 
+		// handle module url
+		if (typeof Controller === 'string') {
+			loader(Controller).then(initController)
+			return
+		}
+
+		// handle factory function
 		if (_.isFn(Controller) && !(BaseController isPrototypeOf Controller)) {
             Controller = Controller(locationState)
         }
 
+        // handle thenable object
 		if (_.isThenable(Controller)) {
-			Controller.then()
+			Controller.then(initController)
 			return
 		}
-
+		initController(Controller)
 	}
 	initController(Controller) {
-		let { rootEl } = this
+		let { root, state } = this
 		let state = this.getState()
 		let container = document.createElement('div')
 		let controller = new Controller({
 			container
 		})
 	}
-	start() {
-		let { } = this
+	getState() {
+		let state = this.state = {
+			location: _.extend({}, location)
+		}
+		if (this.pushState) {
+			state.pathname = location.pathname
+			state.search = location.search
+		} else {
+			let { hashPrefix } = this
+			let hash = location.hash.substr(hashPrefix ? hashPrefix.length + 1 : 1)
+			let index = hash.indexOf('?')
+			if (index === -1) {
+				state.pathname = hash
+				state.search = ''
+			} else {
+				state.pathname = hash.substr(0, index)
+				state.search = hash.substr(index)
+			}
+		}
+		return state
 	}
 	addEvent() {
-		let { pushState, hash } = this
+		let { pushState } = this
 		if (pushState === false) {
-
+			window.addEventListener('hashchange')
 		}
 	}
 }

@@ -17,6 +17,7 @@ export default class Controller {
 		this.isClient = isClient
 		this.isServer = isServer
 	}
+	gotTo() {}
 	renderToDOM() {}
 	renderToString() {}
 	render() {}

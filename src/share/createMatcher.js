@@ -2,8 +2,7 @@ import pathToRegexp from 'path-to-regexp'
 import querystring from 'querystring'
 import * as _ from './util'
 
-let createMatcher = routes => (location, state) => {
-    _.extend(state, location)
+let createMatcher = routes => (state) => {
     let pathname = cleanPath(state.pathname)
     let query = querystring.parse(cleanSearch(state.search))
     let matchResult = null
