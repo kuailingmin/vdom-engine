@@ -99,7 +99,11 @@
 
 	var _createStore2 = _interopRequireDefault(_createStore);
 
+	var _constant = __webpack_require__(3);
+
 	var Share = {
+		isClient: _constant.isClient,
+		isServer: _constant.isServer,
 		h: _createElement.createElement,
 		createElement: _createElement.createElement,
 		createFactory: _createElement.createFactory,
@@ -253,6 +257,10 @@
 	exports.HOOK_DID_UPDATE = HOOK_DID_UPDATE;
 	var HOOK_WILL_UNMOUNT = 'hook-willUnmount';
 	exports.HOOK_WILL_UNMOUNT = HOOK_WILL_UNMOUNT;
+	var isClient = typeof window !== 'undefined';
+	exports.isClient = isClient;
+	var isServer = !isClient;
+	exports.isServer = isServer;
 
 /***/ },
 /* 4 */
@@ -546,13 +554,9 @@
 	    value: true
 	});
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-	var _util = __webpack_require__(4);
-
-	var _ = _interopRequireWildcard(_util);
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	var _pathToRegexp = __webpack_require__(7);
 
@@ -562,36 +566,49 @@
 
 	var _querystring2 = _interopRequireDefault(_querystring);
 
+	var _util = __webpack_require__(4);
+
+	var _ = _interopRequireWildcard(_util);
+
 	var createMatcher = function createMatcher(routes) {
-	    return function (location, data) {
-	        var state = _.extend({}, location);
+	    return function (state) {
 	        var pathname = cleanPath(state.pathname);
-	        var search = cleanSearch(state.search);
-	        var params = state.params = {};
-	        state.query = _querystring2['default'].parse(search);
+	        var query = _querystring2['default'].parse(cleanSearch(state.search));
+	        var matchResult = null;
+	        state.query = query;
 	        for (var pattern in routes) {
-	            var isMatched = matchPath(pattern, pathname, params);
-	            var handler = routes[pattern];
-	            if (isMatched && _.isFn(handler)) {
-	                handler(params, data);
+	            var result = matchPath(pattern, pathname);
+	            if (result) {
+	                matchResult = result;
+	                matchResult.pattern = pattern;
 	                break;
 	            }
 	        }
-	        return state;
+	        if (matchResult) {
+	            var Controller = routes[matchResult.pattern];
+	            var params = getParams(matchResult);
+	            state.params = params;
+	            return Controller;
+	        }
 	    };
 	};
 
 	exports['default'] = createMatcher;
 
-	function matchPath(path, pathname, params) {
+	function matchPath(pathPattern, pathname) {
 	    var keys = [];
-	    var regexp = (0, _pathToRegexp2['default'])(path, keys);
+	    var regexp = (0, _pathToRegexp2['default'])(pathPattern, keys);
 	    var matches = regexp.exec(pathname);
-
-	    if (!matches) {
-	        return false;
+	    if (matches) {
+	        return { matches: matches, keys: keys };
 	    }
+	}
 
+	function getParams(_ref) {
+	    var matches = _ref.matches;
+	    var keys = _ref.keys;
+
+	    var params = {};
 	    for (var i = 1, len = matches.length; i < len; i++) {
 	        var key = keys[i - 1];
 	        if (key) {
@@ -602,8 +619,7 @@
 	            }
 	        }
 	    }
-
-	    return true;
+	    return params;
 	}
 
 	function cleanSearch(search) {
