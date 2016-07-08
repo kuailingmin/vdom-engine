@@ -20,14 +20,16 @@ export default class App {
 			back: this.back.bind(this),
 			forward: this.forward.bind(this),
 		}
+		this.hashPrefix = this.hashPrefix || ''
+		this.rootPath = this.rootPath || ''
 	}
 	renderToDOM() {}
 	unmountComponentAtNode() {}
-	init() {
+	start() {
 		this.bindEvent()
 		this.handleEvent()
 	}
-	destroy() {
+	stop() {
 		this.unbindEvent()
 	}
 	getContainer() {
@@ -40,41 +42,43 @@ export default class App {
 	}
 	renderToContainer(component) {
 		let container = this.getContainer()
-		this.renderToDOM(component, container)
+		this.viewEngine.render(component, container)
 	}
 	createController(Controller) {
-		let controller = new Controller()
-		this.initController(controller, this.state)
+		let controller = new Controller(this.state, this.actions)
+		this.initController(controller)
 	}
-	initController(controller, state) {
-		let component = controller.render(state, this.actions)
+	initController(controller) {
+		controller.init && controller.init(this.state, this.actions)
+		let component = controller.render()
 		this.controller = controller
 		this.renderToContainer(component)
-	},
-	updateController(controller, state) {
-		let component = controller.render(state)
+	}
+	updateController(controller) {
+		controller.update && controller.update(this.state, this.actions)
+		let component = controller.render()
 		this.renderToContainer(component)
-	},
-	destroyController(controller, state) {
+	}
+	destroyController(controller) {
+		controller.destroy && controller.destroy(this.state, this.actions)
 		let container = this.getContainer()
-		this.unmountComponentAtNode(container)
+		this.viewEngine.destroy(container)
 	}
 	handleEvent() {
 		let prevState = this.state
 		let curState = this.getState()
 
-		if (prevState.pathname === curState.pathname) {
-			this.updateController(this.controller, curState)
-			return
-		}
-
 		if (this.controller) {
-			this.destroyController(this.controller, curState)
-			this.controller = null
+			if (prevState.pathname === curState.pathname) {
+				this.updateController(this.controller)
+			} else {
+				this.destroyController(this.controller)
+				this.controller = null
+			}
 		}
 
 		let { loader, matcher, createController } = this
-		let Controller = matcher(state)
+		let Controller = matcher(curState)
 
 		// handle module url and load Controller
 		if (typeof Controller === 'string') {
@@ -84,7 +88,7 @@ export default class App {
 
 		// handle factory function which return a Controller
 		if (_.isFn(Controller) && (!Controller.prototype || !Controller.prototype.init)) {
-            Controller = Controller(state)
+            Controller = Controller(curState)
         }
 
         // handle thenable object which will resolve a Controller
@@ -98,11 +102,16 @@ export default class App {
 	getState() {
 		let state = this.state = {}
 		if (this.pushState) {
-			state.pathname = location.pathname
+			let { rootPath } = this
+			state.pathname = location.pathname.substr(rootPath.length)
 			state.search = location.search
 		} else {
 			let { hashPrefix } = this
 			let hash = location.hash.substr(hashPrefix ? hashPrefix.length + 1 : 1)
+			if (!hash) {
+				hash = '/'
+				location.hash = `${hashPrefix}${hash}`
+			}
 			let index = hash.indexOf('?')
 			if (index === -1) {
 				state.pathname = hash
@@ -115,14 +124,22 @@ export default class App {
 		return state
 	}
 	goTo(url, isReplace) {
-		let { pushState } = this
-		if (pushState) {
-			if (isReplace) {
-				history.replaceState(null, '', url)
-			} else {
-				history.pushState(null, '', url)
-			}
+		let { pushState, state } = this
+		if (state.pathname === url) {
+			return
 		}
+		if (pushState) {
+			let { rootPath } = this
+			if (isReplace) {
+				history.replaceState(null, '', `${rootPath}${url}`)
+			} else {
+				history.pushState(null, '', `${rootPath}${url}`)
+			}
+			this.handleEvent()
+			return
+		}
+		let { hashPrefix } = this
+		location.hash = hashPrefix + url
 	}
 	back() {
 		history.back()

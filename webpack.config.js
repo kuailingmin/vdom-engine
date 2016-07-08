@@ -4,7 +4,8 @@ var path = require('path');
 module.exports = {
     watch: true,
     entry: {
-        counter: './examples/counter/src'
+        counter: './examples/counter/src',
+        'simple-spa': './examples/simple-spa/src',
     },
     output: {
         path: './examples/',

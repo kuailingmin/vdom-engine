@@ -46,34 +46,47 @@
 
 	'use strict';
 
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	var _vdomEngineShare = __webpack_require__(1);
-
-	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
 
 	var _vdomEngineClient = __webpack_require__(14);
 
 	var _vdomEngineClient2 = _interopRequireDefault(_vdomEngineClient);
 
-	var _CounterUI = __webpack_require__(21);
+	var _homeController = __webpack_require__(24);
 
-	var _CounterUI2 = _interopRequireDefault(_CounterUI);
+	var _homeController2 = _interopRequireDefault(_homeController);
 
-	var _store = __webpack_require__(22);
+	var _listController = __webpack_require__(25);
 
-	var _store2 = _interopRequireDefault(_store);
+	var _listController2 = _interopRequireDefault(_listController);
 
-	var renderView = function renderView() {
-		_vdomEngineClient2['default'].render(_vdomEngineShare2['default'].createElement(_CounterUI2['default'], _extends({}, _store2['default'].getState(), _store2['default'].actions)), document.getElementById('container'));
+	var _detailController = __webpack_require__(26);
+
+	var _detailController2 = _interopRequireDefault(_detailController);
+
+	var routes = {
+		'/': _homeController2['default'],
+		'/home': _homeController2['default'],
+		'/list': _listController2['default'],
+		'/detail': _detailController2['default']
 	};
 
-	renderView();
-	_store2['default'].subscribe(renderView);
+	var container = '#container';
+	var viewEngine = _vdomEngineClient2['default'];
+	var hashPrefix = '!';
+	var rootPath = '/examples/simple-spa';
+	var pushState = false;
 
-	console.log('start');
+	var app = new _vdomEngineClient.App({
+		pushState: pushState,
+		rootPath: rootPath,
+		hashPrefix: hashPrefix,
+		container: container,
+		routes: routes,
+		viewEngine: viewEngine
+	});
+
+	app.start();
 
 /***/ },
 /* 1 */
@@ -2496,171 +2509,415 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 21 */
+/* 21 */,
+/* 22 */,
+/* 23 */,
+/* 24 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
+	// controller
+	"use strict";
 
-	Object.defineProperty(exports, '__esModule', {
+	Object.defineProperty(exports, "__esModule", {
 		value: true
 	});
-	exports['default'] = CounterUI;
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var _vdomEngineShare = __webpack_require__(1);
 
 	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
 
-	function CounterUI(_ref) {
-		var count = _ref.count;
-		var INCREMENT = _ref.INCREMENT;
-		var DECREMENT = _ref.DECREMENT;
-		var INCREMENT_IF_ODD = _ref.INCREMENT_IF_ODD;
-		var ASYNC_INCREMENT = _ref.ASYNC_INCREMENT;
+	var Controller = (function () {
+		function Controller() {
+			_classCallCheck(this, Controller);
 
-		return _vdomEngineShare2['default'].createElement(
-			'p',
-			null,
-			'Clicked: ',
-			_vdomEngineShare2['default'].createElement(
-				'span',
-				null,
-				count
-			),
-			' times',
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-click': INCREMENT },
-				'+'
-			),
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-click': DECREMENT },
-				'-'
-			),
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-click': INCREMENT_IF_ODD },
-				'Increment if odd'
-			),
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-click': ASYNC_INCREMENT },
-				'Increment async'
-			),
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-dblclick': INCREMENT },
-				'Increment by dblclick'
-			),
-			' ',
-			_vdomEngineShare2['default'].createElement(
-				'button',
-				{ 'on-mousemove': DECREMENT },
-				'Decrement by mousemove'
-			)
-		);
-	}
+			this.willMount = this.willMount.bind(this);
+			this.didMount = this.didMount.bind(this);
+			this.willUpdate = this.willUpdate.bind(this);
+			this.didUpdate = this.didUpdate.bind(this);
+			this.willUnmount = this.willUnmount.bind(this);
+			this.goTo = this.goTo.bind(this);
+		}
 
-	module.exports = exports['default'];
+		_createClass(Controller, [{
+			key: "init",
+			value: function init($location, $history) {
+				this.$location = $location;
+				this.$history = $history;
+			}
+		}, {
+			key: "update",
+			value: function update($location, $history) {
+				this.$location = $location;
+				this.$history = $history;
+			}
+		}, {
+			key: "render",
+			value: function render() {
+				return _vdomEngineShare2["default"].createElement(
+					"div",
+					{
+						"hook-willMount": this.willMount,
+						"hook-didMount": this.didMount,
+						"hook-willUpdate": this.willUpdate,
+						"hook-didUpdate": this.didUpdate,
+						"hook-willUnmount": this.willUnmount
+					},
+					_vdomEngineShare2["default"].createElement(
+						"h1",
+						null,
+						"home: ",
+						JSON.stringify(this.$location, null, 2)
+					),
+					_vdomEngineShare2["default"].createElement(
+						"ul",
+						null,
+						_vdomEngineShare2["default"].createElement(
+							"li",
+							null,
+							_vdomEngineShare2["default"].createElement(
+								"a",
+								{ "attr-href": "/home", "on-click": this.goTo },
+								"home page"
+							)
+						),
+						_vdomEngineShare2["default"].createElement(
+							"li",
+							null,
+							_vdomEngineShare2["default"].createElement(
+								"a",
+								{ "attr-href": "/list", "on-click": this.goTo },
+								"list page"
+							)
+						),
+						_vdomEngineShare2["default"].createElement(
+							"li",
+							null,
+							_vdomEngineShare2["default"].createElement(
+								"a",
+								{ "attr-href": "/detail", "on-click": this.goTo },
+								"detail page"
+							)
+						)
+					)
+				);
+			}
+		}, {
+			key: "goTo",
+			value: function goTo(event) {
+				event.preventDefault();
+				var href = event.currentTarget.getAttribute('href');
+				this.$history.goTo(href);
+			}
+		}, {
+			key: "willMount",
+			value: function willMount() {
+				console.log('willMount');
+			}
+		}, {
+			key: "didMount",
+			value: function didMount() {
+				console.log('didMount');
+			}
+		}, {
+			key: "willUpdate",
+			value: function willUpdate() {
+				console.log('willUpdate');
+			}
+		}, {
+			key: "didUpdate",
+			value: function didUpdate() {
+				console.log('didUpdate');
+			}
+		}, {
+			key: "willUnmount",
+			value: function willUnmount() {
+				console.log('willUnmount');
+			}
+		}]);
+
+		return Controller;
+	})();
+
+	exports["default"] = Controller;
+	module.exports = exports["default"];
 
 /***/ },
-/* 22 */
+/* 25 */
 /***/ function(module, exports, __webpack_require__) {
 
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-		value: true
-	});
-
-	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
-
-	var _vdomEngineShare = __webpack_require__(1);
-
-	var _setter = __webpack_require__(23);
-
-	var setter = _interopRequireWildcard(_setter);
-
-	var initialState = {
-		count: 10
-	};
-	var settings = {
-		name: 'counter',
-		setter: setter,
-		initialState: initialState
-	};
-	var store = (0, _vdomEngineShare.createStore)(settings);
-
-	exports['default'] = store;
-	module.exports = exports['default'];
-
-/***/ },
-/* 23 */
-/***/ function(module, exports) {
-
-	// setter for changing state
-
+	// controller
 	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
-	    value: true
+		value: true
 	});
 
-	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	var INCREMENT = function INCREMENT(state, data) {
-	    var count = state.count;
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-	    count += 1;
-	    return _extends({}, state, {
-	        count: count
-	    });
-	};
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	exports.INCREMENT = INCREMENT;
-	var DECREMENT = function DECREMENT(state, data) {
-	    var count = state.count;
+	var _vdomEngineShare = __webpack_require__(1);
 
-	    count -= 1;
-	    return _extends({}, state, {
-	        count: count
-	    });
-	};
+	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
 
-	exports.DECREMENT = DECREMENT;
-	var INCREMENT_IF_ODD = function INCREMENT_IF_ODD(state, data) {
-	    var count = state.count;
+	var Controller = (function () {
+		function Controller() {
+			_classCallCheck(this, Controller);
 
-	    if (count % 2 !== 0) {
-	        count += 1;
-	        return _extends({}, state, {
-	            count: count
-	        });
-	    }
-	    return state;
-	};
+			this.willMount = this.willMount.bind(this);
+			this.didMount = this.didMount.bind(this);
+			this.willUpdate = this.willUpdate.bind(this);
+			this.didUpdate = this.didUpdate.bind(this);
+			this.willUnmount = this.willUnmount.bind(this);
+			this.goTo = this.goTo.bind(this);
+		}
 
-	exports.INCREMENT_IF_ODD = INCREMENT_IF_ODD;
-	var ASYNC_INCREMENT = function ASYNC_INCREMENT(state, data) {
-	    return new Promise(function (resolve, reject) {
-	        setTimeout(function () {
-	            var count = state.count;
+		_createClass(Controller, [{
+			key: "init",
+			value: function init($location, $history) {
+				this.$location = $location;
+				this.$history = $history;
+			}
+		}, {
+			key: "update",
+			value: function update($location, $history) {
+				this.$location = $location;
+				this.$history = $history;
+			}
+		}, {
+			key: "render",
+			value: function render() {
+				return _vdomEngineShare2["default"].createElement(
+					"div",
+					{
+						"hook-willMount": this.willMount,
+						"hook-didMount": this.didMount,
+						"hook-willUpdate": this.willUpdate,
+						"hook-didUpdate": this.didUpdate,
+						"hook-willUnmount": this.willUnmount
+					},
+					_vdomEngineShare2["default"].createElement(
+						"h1",
+						null,
+						"list: ",
+						JSON.stringify(this.$location, null, 2)
+					),
+					_vdomEngineShare2["default"].createElement(
+						"ul",
+						null,
+						_vdomEngineShare2["default"].createElement(
+							"li",
+							null,
+							_vdomEngineShare2["default"].createElement(
+								"a",
+								{ "attr-href": "/home", "on-click": this.goTo },
+								"home page"
+							)
+						),
+						_vdomEngineShare2["default"].createElement(
+							"li",
+							null,
+							_vdomEngineShare2["default"].createElement(
+								"a",
+								{ "attr-href": "/list", "on-click": this.goTo },
+								"list page"
+							)
+						),
+						_vdomEngineShare2["default"].createElement(
+							"li",
+							null,
+							_vdomEngineShare2["default"].createElement(
+								"a",
+								{ "attr-href": "/detail", "on-click": this.goTo },
+								"detail page"
+							)
+						)
+					)
+				);
+			}
+		}, {
+			key: "goTo",
+			value: function goTo(event) {
+				event.preventDefault();
+				var href = event.currentTarget.getAttribute('href');
+				this.$history.goTo(href);
+			}
+		}, {
+			key: "willMount",
+			value: function willMount() {
+				console.log('willMount');
+			}
+		}, {
+			key: "didMount",
+			value: function didMount() {
+				console.log('didMount');
+			}
+		}, {
+			key: "willUpdate",
+			value: function willUpdate() {
+				console.log('willUpdate');
+			}
+		}, {
+			key: "didUpdate",
+			value: function didUpdate() {
+				console.log('didUpdate');
+			}
+		}, {
+			key: "willUnmount",
+			value: function willUnmount() {
+				console.log('willUnmount');
+			}
+		}]);
 
-	            count += 1;
-	            resolve(_extends({}, state, {
-	                count: count
-	            }));
-	        }, 1000);
-	    });
-	};
-	exports.ASYNC_INCREMENT = ASYNC_INCREMENT;
+		return Controller;
+	})();
+
+	exports["default"] = Controller;
+	module.exports = exports["default"];
+
+/***/ },
+/* 26 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// controller
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var _vdomEngineShare = __webpack_require__(1);
+
+	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
+
+	var Controller = (function () {
+		function Controller() {
+			_classCallCheck(this, Controller);
+
+			this.willMount = this.willMount.bind(this);
+			this.didMount = this.didMount.bind(this);
+			this.willUpdate = this.willUpdate.bind(this);
+			this.didUpdate = this.didUpdate.bind(this);
+			this.willUnmount = this.willUnmount.bind(this);
+			this.goTo = this.goTo.bind(this);
+		}
+
+		_createClass(Controller, [{
+			key: "init",
+			value: function init($location, $history) {
+				this.$location = $location;
+				this.$history = $history;
+			}
+		}, {
+			key: "update",
+			value: function update($location, $history) {
+				this.$location = $location;
+				this.$history = $history;
+			}
+		}, {
+			key: "render",
+			value: function render() {
+				return _vdomEngineShare2["default"].createElement(
+					"div",
+					{
+						"hook-willMount": this.willMount,
+						"hook-didMount": this.didMount,
+						"hook-willUpdate": this.willUpdate,
+						"hook-didUpdate": this.didUpdate,
+						"hook-willUnmount": this.willUnmount
+					},
+					_vdomEngineShare2["default"].createElement(
+						"h1",
+						null,
+						"detail: ",
+						JSON.stringify(this.$location, null, 2)
+					),
+					_vdomEngineShare2["default"].createElement(
+						"ul",
+						null,
+						_vdomEngineShare2["default"].createElement(
+							"li",
+							null,
+							_vdomEngineShare2["default"].createElement(
+								"a",
+								{ "attr-href": "/home", "on-click": this.goTo },
+								"home page"
+							)
+						),
+						_vdomEngineShare2["default"].createElement(
+							"li",
+							null,
+							_vdomEngineShare2["default"].createElement(
+								"a",
+								{ "attr-href": "/list", "on-click": this.goTo },
+								"list page"
+							)
+						),
+						_vdomEngineShare2["default"].createElement(
+							"li",
+							null,
+							_vdomEngineShare2["default"].createElement(
+								"a",
+								{ "attr-href": "/detail", "on-click": this.goTo },
+								"detail page"
+							)
+						)
+					)
+				);
+			}
+		}, {
+			key: "goTo",
+			value: function goTo(event) {
+				event.preventDefault();
+				var href = event.currentTarget.getAttribute('href');
+				this.$history.goTo(href);
+			}
+		}, {
+			key: "willMount",
+			value: function willMount() {
+				console.log('willMount');
+			}
+		}, {
+			key: "didMount",
+			value: function didMount() {
+				console.log('didMount');
+			}
+		}, {
+			key: "willUpdate",
+			value: function willUpdate() {
+				console.log('willUpdate');
+			}
+		}, {
+			key: "didUpdate",
+			value: function didUpdate() {
+				console.log('didUpdate');
+			}
+		}, {
+			key: "willUnmount",
+			value: function willUnmount() {
+				console.log('willUnmount');
+			}
+		}]);
+
+		return Controller;
+	})();
+
+	exports["default"] = Controller;
+	module.exports = exports["default"];
 
 /***/ }
 /******/ ]);
