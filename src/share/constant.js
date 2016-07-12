@@ -14,3 +14,9 @@ export const HOOK_DID_UPDATE = 'hook-didUpdate'
 export const HOOK_WILL_UNMOUNT = 'hook-willUnmount'
 export const isClient = typeof window !== 'undefined'
 export const isServer = !isClient
+export const locationDefaults = {
+    useHash: true,
+    parseQuery: true,
+    rootPath: '',
+    hashPrefix: '!',
+}

@@ -46,47 +46,34 @@
 
 	'use strict';
 
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var _vdomEngineShare = __webpack_require__(1);
+
+	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
 
 	var _vdomEngineClient = __webpack_require__(14);
 
 	var _vdomEngineClient2 = _interopRequireDefault(_vdomEngineClient);
 
-	var _homeController = __webpack_require__(24);
+	var _CounterUI = __webpack_require__(21);
 
-	var _homeController2 = _interopRequireDefault(_homeController);
+	var _CounterUI2 = _interopRequireDefault(_CounterUI);
 
-	var _listController = __webpack_require__(25);
+	var _store = __webpack_require__(22);
 
-	var _listController2 = _interopRequireDefault(_listController);
+	var _store2 = _interopRequireDefault(_store);
 
-	var _detailController = __webpack_require__(26);
-
-	var _detailController2 = _interopRequireDefault(_detailController);
-
-	var routes = {
-		'/': _homeController2['default'],
-		'/home': _homeController2['default'],
-		'/list': _listController2['default'],
-		'/detail': _detailController2['default']
+	var renderView = function renderView() {
+		_vdomEngineClient2['default'].render(_vdomEngineShare2['default'].createElement(_CounterUI2['default'], _extends({}, _store2['default'].getState(), _store2['default'].actions)), document.getElementById('container'));
 	};
 
-	var container = '#container';
-	var viewEngine = _vdomEngineClient2['default'];
-	var hashPrefix = '!';
-	var rootPath = '/examples/simple-spa';
-	var pushState = false;
+	renderView();
+	_store2['default'].subscribe(renderView);
 
-	var app = new _vdomEngineClient.App({
-		pushState: pushState,
-		rootPath: rootPath,
-		hashPrefix: hashPrefix,
-		container: container,
-		routes: routes,
-		viewEngine: viewEngine
-	});
-
-	app.start();
+	console.log('start');
 
 /***/ },
 /* 1 */
@@ -246,7 +233,7 @@
 	'use strict';
 
 	Object.defineProperty(exports, '__esModule', {
-	  value: true
+	    value: true
 	});
 	var SVGNamespaceURI = 'http://www.w3.org/2000/svg';
 	exports.SVGNamespaceURI = SVGNamespaceURI;
@@ -274,6 +261,13 @@
 	exports.isClient = isClient;
 	var isServer = !isClient;
 	exports.isServer = isServer;
+	var locationDefaults = {
+	    useHash: true,
+	    parseQuery: true,
+	    rootPath: '',
+	    hashPrefix: '!'
+	};
+	exports.locationDefaults = locationDefaults;
 
 /***/ },
 /* 4 */
@@ -566,6 +560,7 @@
 	Object.defineProperty(exports, '__esModule', {
 	    value: true
 	});
+	exports['default'] = createMatcher;
 
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
@@ -575,52 +570,34 @@
 
 	var _pathToRegexp2 = _interopRequireDefault(_pathToRegexp);
 
-	var _querystring = __webpack_require__(9);
-
-	var _querystring2 = _interopRequireDefault(_querystring);
-
 	var _util = __webpack_require__(4);
 
 	var _ = _interopRequireWildcard(_util);
 
-	var createMatcher = function createMatcher(routes) {
-	    return function (state) {
-	        var pathname = cleanPath(state.pathname);
-	        var query = _querystring2['default'].parse(cleanSearch(state.search));
-	        var matchResult = null;
-	        state.query = query;
-	        for (var pattern in routes) {
-	            var result = matchPath(pattern, pathname);
-	            if (result) {
-	                matchResult = result;
-	                matchResult.pattern = pattern;
-	                break;
+	function createMatcher($routes) {
+	    var routes = $routes.map(createRoute);
+	    return function matcher($pathname) {
+	        var pathname = cleanPath($pathname);
+	        for (var i = 0, len = routes.length; i < len; i++) {
+	            var route = routes[i];
+	            var matches = route.regexp.exec(pathname);
+	            if (matches) {
+	                var params = getParams(matches, route.keys);
+	                var action = route.action;
+	                return { params: params, action: action };
 	            }
 	        }
-	        if (matchResult) {
-	            var Controller = routes[matchResult.pattern];
-	            var params = getParams(matchResult);
-	            state.params = params;
-	            return Controller;
-	        }
 	    };
-	};
-
-	exports['default'] = createMatcher;
-
-	function matchPath(pathPattern, pathname) {
-	    var keys = [];
-	    var regexp = (0, _pathToRegexp2['default'])(pathPattern, keys);
-	    var matches = regexp.exec(pathname);
-	    if (matches) {
-	        return { matches: matches, keys: keys };
-	    }
 	}
 
-	function getParams(_ref) {
-	    var matches = _ref.matches;
-	    var keys = _ref.keys;
+	function createRoute($route) {
+	    var route = _.extend({}, $route);
+	    var keys = route.keys = [];
+	    route.regexp = (0, _pathToRegexp2['default'])(route.path, keys);
+	    return route;
+	}
 
+	function getParams(matches, keys) {
 	    var params = {};
 	    for (var i = 1, len = matches.length; i < len; i++) {
 	        var key = keys[i - 1];
@@ -633,10 +610,6 @@
 	        }
 	    }
 	    return params;
-	}
-
-	function cleanSearch(search) {
-	    return search[0] === '?' ? search.substr(1) : search;
 	}
 
 	function cleanPath(path) {
@@ -1086,172 +1059,9 @@
 
 
 /***/ },
-/* 9 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	exports.decode = exports.parse = __webpack_require__(10);
-	exports.encode = exports.stringify = __webpack_require__(11);
-
-
-/***/ },
-/* 10 */
-/***/ function(module, exports) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	'use strict';
-
-	// If obj.hasOwnProperty has been overridden, then calling
-	// obj.hasOwnProperty(prop) will break.
-	// See: https://github.com/joyent/node/issues/1707
-	function hasOwnProperty(obj, prop) {
-	  return Object.prototype.hasOwnProperty.call(obj, prop);
-	}
-
-	module.exports = function(qs, sep, eq, options) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  var obj = {};
-
-	  if (typeof qs !== 'string' || qs.length === 0) {
-	    return obj;
-	  }
-
-	  var regexp = /\+/g;
-	  qs = qs.split(sep);
-
-	  var maxKeys = 1000;
-	  if (options && typeof options.maxKeys === 'number') {
-	    maxKeys = options.maxKeys;
-	  }
-
-	  var len = qs.length;
-	  // maxKeys <= 0 means that we should not limit keys count
-	  if (maxKeys > 0 && len > maxKeys) {
-	    len = maxKeys;
-	  }
-
-	  for (var i = 0; i < len; ++i) {
-	    var x = qs[i].replace(regexp, '%20'),
-	        idx = x.indexOf(eq),
-	        kstr, vstr, k, v;
-
-	    if (idx >= 0) {
-	      kstr = x.substr(0, idx);
-	      vstr = x.substr(idx + 1);
-	    } else {
-	      kstr = x;
-	      vstr = '';
-	    }
-
-	    k = decodeURIComponent(kstr);
-	    v = decodeURIComponent(vstr);
-
-	    if (!hasOwnProperty(obj, k)) {
-	      obj[k] = v;
-	    } else if (Array.isArray(obj[k])) {
-	      obj[k].push(v);
-	    } else {
-	      obj[k] = [obj[k], v];
-	    }
-	  }
-
-	  return obj;
-	};
-
-
-/***/ },
-/* 11 */
-/***/ function(module, exports) {
-
-	// Copyright Joyent, Inc. and other Node contributors.
-	//
-	// Permission is hereby granted, free of charge, to any person obtaining a
-	// copy of this software and associated documentation files (the
-	// "Software"), to deal in the Software without restriction, including
-	// without limitation the rights to use, copy, modify, merge, publish,
-	// distribute, sublicense, and/or sell copies of the Software, and to permit
-	// persons to whom the Software is furnished to do so, subject to the
-	// following conditions:
-	//
-	// The above copyright notice and this permission notice shall be included
-	// in all copies or substantial portions of the Software.
-	//
-	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-	// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-	// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-	// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-	'use strict';
-
-	var stringifyPrimitive = function(v) {
-	  switch (typeof v) {
-	    case 'string':
-	      return v;
-
-	    case 'boolean':
-	      return v ? 'true' : 'false';
-
-	    case 'number':
-	      return isFinite(v) ? v : '';
-
-	    default:
-	      return '';
-	  }
-	};
-
-	module.exports = function(obj, sep, eq, name) {
-	  sep = sep || '&';
-	  eq = eq || '=';
-	  if (obj === null) {
-	    obj = undefined;
-	  }
-
-	  if (typeof obj === 'object') {
-	    return Object.keys(obj).map(function(k) {
-	      var ks = encodeURIComponent(stringifyPrimitive(k)) + eq;
-	      if (Array.isArray(obj[k])) {
-	        return obj[k].map(function(v) {
-	          return ks + encodeURIComponent(stringifyPrimitive(v));
-	        }).join(sep);
-	      } else {
-	        return ks + encodeURIComponent(stringifyPrimitive(obj[k]));
-	      }
-	    }).join(sep);
-
-	  }
-
-	  if (!name) return '';
-	  return encodeURIComponent(stringifyPrimitive(name)) + eq +
-	         encodeURIComponent(stringifyPrimitive(obj));
-	};
-
-
-/***/ },
+/* 9 */,
+/* 10 */,
+/* 11 */,
 /* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -2509,415 +2319,171 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 21 */,
-/* 22 */,
-/* 23 */,
-/* 24 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// controller
-	"use strict";
+	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
+	Object.defineProperty(exports, '__esModule', {
 		value: true
 	});
+	exports['default'] = CounterUI;
 
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	var _vdomEngineShare = __webpack_require__(1);
 
 	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
 
-	var Controller = (function () {
-		function Controller() {
-			_classCallCheck(this, Controller);
+	function CounterUI(_ref) {
+		var count = _ref.count;
+		var INCREMENT = _ref.INCREMENT;
+		var DECREMENT = _ref.DECREMENT;
+		var INCREMENT_IF_ODD = _ref.INCREMENT_IF_ODD;
+		var ASYNC_INCREMENT = _ref.ASYNC_INCREMENT;
 
-			this.willMount = this.willMount.bind(this);
-			this.didMount = this.didMount.bind(this);
-			this.willUpdate = this.willUpdate.bind(this);
-			this.didUpdate = this.didUpdate.bind(this);
-			this.willUnmount = this.willUnmount.bind(this);
-			this.goTo = this.goTo.bind(this);
-		}
+		return _vdomEngineShare2['default'].createElement(
+			'p',
+			null,
+			'Clicked: ',
+			_vdomEngineShare2['default'].createElement(
+				'span',
+				null,
+				count
+			),
+			' times',
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-click': INCREMENT },
+				'+'
+			),
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-click': DECREMENT },
+				'-'
+			),
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-click': INCREMENT_IF_ODD },
+				'Increment if odd'
+			),
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-click': ASYNC_INCREMENT },
+				'Increment async'
+			),
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-dblclick': INCREMENT },
+				'Increment by dblclick'
+			),
+			' ',
+			_vdomEngineShare2['default'].createElement(
+				'button',
+				{ 'on-mousemove': DECREMENT },
+				'Decrement by mousemove'
+			)
+		);
+	}
 
-		_createClass(Controller, [{
-			key: "init",
-			value: function init($location, $history) {
-				this.$location = $location;
-				this.$history = $history;
-			}
-		}, {
-			key: "update",
-			value: function update($location, $history) {
-				this.$location = $location;
-				this.$history = $history;
-			}
-		}, {
-			key: "render",
-			value: function render() {
-				return _vdomEngineShare2["default"].createElement(
-					"div",
-					{
-						"hook-willMount": this.willMount,
-						"hook-didMount": this.didMount,
-						"hook-willUpdate": this.willUpdate,
-						"hook-didUpdate": this.didUpdate,
-						"hook-willUnmount": this.willUnmount
-					},
-					_vdomEngineShare2["default"].createElement(
-						"h1",
-						null,
-						"home: ",
-						JSON.stringify(this.$location, null, 2)
-					),
-					_vdomEngineShare2["default"].createElement(
-						"ul",
-						null,
-						_vdomEngineShare2["default"].createElement(
-							"li",
-							null,
-							_vdomEngineShare2["default"].createElement(
-								"a",
-								{ "attr-href": "/home", "on-click": this.goTo },
-								"home page"
-							)
-						),
-						_vdomEngineShare2["default"].createElement(
-							"li",
-							null,
-							_vdomEngineShare2["default"].createElement(
-								"a",
-								{ "attr-href": "/list", "on-click": this.goTo },
-								"list page"
-							)
-						),
-						_vdomEngineShare2["default"].createElement(
-							"li",
-							null,
-							_vdomEngineShare2["default"].createElement(
-								"a",
-								{ "attr-href": "/detail", "on-click": this.goTo },
-								"detail page"
-							)
-						)
-					)
-				);
-			}
-		}, {
-			key: "goTo",
-			value: function goTo(event) {
-				event.preventDefault();
-				var href = event.currentTarget.getAttribute('href');
-				this.$history.goTo(href);
-			}
-		}, {
-			key: "willMount",
-			value: function willMount() {
-				console.log('willMount');
-			}
-		}, {
-			key: "didMount",
-			value: function didMount() {
-				console.log('didMount');
-			}
-		}, {
-			key: "willUpdate",
-			value: function willUpdate() {
-				console.log('willUpdate');
-			}
-		}, {
-			key: "didUpdate",
-			value: function didUpdate() {
-				console.log('didUpdate');
-			}
-		}, {
-			key: "willUnmount",
-			value: function willUnmount() {
-				console.log('willUnmount');
-			}
-		}]);
-
-		return Controller;
-	})();
-
-	exports["default"] = Controller;
-	module.exports = exports["default"];
+	module.exports = exports['default'];
 
 /***/ },
-/* 25 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// controller
-	"use strict";
+	'use strict';
 
-	Object.defineProperty(exports, "__esModule", {
+	Object.defineProperty(exports, '__esModule', {
 		value: true
 	});
 
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
 	var _vdomEngineShare = __webpack_require__(1);
 
-	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
+	var _setter = __webpack_require__(23);
 
-	var Controller = (function () {
-		function Controller() {
-			_classCallCheck(this, Controller);
+	var setter = _interopRequireWildcard(_setter);
 
-			this.willMount = this.willMount.bind(this);
-			this.didMount = this.didMount.bind(this);
-			this.willUpdate = this.willUpdate.bind(this);
-			this.didUpdate = this.didUpdate.bind(this);
-			this.willUnmount = this.willUnmount.bind(this);
-			this.goTo = this.goTo.bind(this);
-		}
+	var initialState = {
+		count: 10
+	};
+	var settings = {
+		name: 'counter',
+		setter: setter,
+		initialState: initialState
+	};
+	var store = (0, _vdomEngineShare.createStore)(settings);
 
-		_createClass(Controller, [{
-			key: "init",
-			value: function init($location, $history) {
-				this.$location = $location;
-				this.$history = $history;
-			}
-		}, {
-			key: "update",
-			value: function update($location, $history) {
-				this.$location = $location;
-				this.$history = $history;
-			}
-		}, {
-			key: "render",
-			value: function render() {
-				return _vdomEngineShare2["default"].createElement(
-					"div",
-					{
-						"hook-willMount": this.willMount,
-						"hook-didMount": this.didMount,
-						"hook-willUpdate": this.willUpdate,
-						"hook-didUpdate": this.didUpdate,
-						"hook-willUnmount": this.willUnmount
-					},
-					_vdomEngineShare2["default"].createElement(
-						"h1",
-						null,
-						"list: ",
-						JSON.stringify(this.$location, null, 2)
-					),
-					_vdomEngineShare2["default"].createElement(
-						"ul",
-						null,
-						_vdomEngineShare2["default"].createElement(
-							"li",
-							null,
-							_vdomEngineShare2["default"].createElement(
-								"a",
-								{ "attr-href": "/home", "on-click": this.goTo },
-								"home page"
-							)
-						),
-						_vdomEngineShare2["default"].createElement(
-							"li",
-							null,
-							_vdomEngineShare2["default"].createElement(
-								"a",
-								{ "attr-href": "/list", "on-click": this.goTo },
-								"list page"
-							)
-						),
-						_vdomEngineShare2["default"].createElement(
-							"li",
-							null,
-							_vdomEngineShare2["default"].createElement(
-								"a",
-								{ "attr-href": "/detail", "on-click": this.goTo },
-								"detail page"
-							)
-						)
-					)
-				);
-			}
-		}, {
-			key: "goTo",
-			value: function goTo(event) {
-				event.preventDefault();
-				var href = event.currentTarget.getAttribute('href');
-				this.$history.goTo(href);
-			}
-		}, {
-			key: "willMount",
-			value: function willMount() {
-				console.log('willMount');
-			}
-		}, {
-			key: "didMount",
-			value: function didMount() {
-				console.log('didMount');
-			}
-		}, {
-			key: "willUpdate",
-			value: function willUpdate() {
-				console.log('willUpdate');
-			}
-		}, {
-			key: "didUpdate",
-			value: function didUpdate() {
-				console.log('didUpdate');
-			}
-		}, {
-			key: "willUnmount",
-			value: function willUnmount() {
-				console.log('willUnmount');
-			}
-		}]);
-
-		return Controller;
-	})();
-
-	exports["default"] = Controller;
-	module.exports = exports["default"];
+	exports['default'] = store;
+	module.exports = exports['default'];
 
 /***/ },
-/* 26 */
-/***/ function(module, exports, __webpack_require__) {
+/* 23 */
+/***/ function(module, exports) {
 
-	// controller
+	// setter for changing state
+
 	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	    value: true
 	});
 
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+	var INCREMENT = function INCREMENT(state, data) {
+	    var count = state.count;
 
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	    count += 1;
+	    return _extends({}, state, {
+	        count: count
+	    });
+	};
 
-	var _vdomEngineShare = __webpack_require__(1);
+	exports.INCREMENT = INCREMENT;
+	var DECREMENT = function DECREMENT(state, data) {
+	    var count = state.count;
 
-	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
+	    count -= 1;
+	    return _extends({}, state, {
+	        count: count
+	    });
+	};
 
-	var Controller = (function () {
-		function Controller() {
-			_classCallCheck(this, Controller);
+	exports.DECREMENT = DECREMENT;
+	var INCREMENT_IF_ODD = function INCREMENT_IF_ODD(state, data) {
+	    var count = state.count;
 
-			this.willMount = this.willMount.bind(this);
-			this.didMount = this.didMount.bind(this);
-			this.willUpdate = this.willUpdate.bind(this);
-			this.didUpdate = this.didUpdate.bind(this);
-			this.willUnmount = this.willUnmount.bind(this);
-			this.goTo = this.goTo.bind(this);
-		}
+	    if (count % 2 !== 0) {
+	        count += 1;
+	        return _extends({}, state, {
+	            count: count
+	        });
+	    }
+	    return state;
+	};
 
-		_createClass(Controller, [{
-			key: "init",
-			value: function init($location, $history) {
-				this.$location = $location;
-				this.$history = $history;
-			}
-		}, {
-			key: "update",
-			value: function update($location, $history) {
-				this.$location = $location;
-				this.$history = $history;
-			}
-		}, {
-			key: "render",
-			value: function render() {
-				return _vdomEngineShare2["default"].createElement(
-					"div",
-					{
-						"hook-willMount": this.willMount,
-						"hook-didMount": this.didMount,
-						"hook-willUpdate": this.willUpdate,
-						"hook-didUpdate": this.didUpdate,
-						"hook-willUnmount": this.willUnmount
-					},
-					_vdomEngineShare2["default"].createElement(
-						"h1",
-						null,
-						"detail: ",
-						JSON.stringify(this.$location, null, 2)
-					),
-					_vdomEngineShare2["default"].createElement(
-						"ul",
-						null,
-						_vdomEngineShare2["default"].createElement(
-							"li",
-							null,
-							_vdomEngineShare2["default"].createElement(
-								"a",
-								{ "attr-href": "/home", "on-click": this.goTo },
-								"home page"
-							)
-						),
-						_vdomEngineShare2["default"].createElement(
-							"li",
-							null,
-							_vdomEngineShare2["default"].createElement(
-								"a",
-								{ "attr-href": "/list", "on-click": this.goTo },
-								"list page"
-							)
-						),
-						_vdomEngineShare2["default"].createElement(
-							"li",
-							null,
-							_vdomEngineShare2["default"].createElement(
-								"a",
-								{ "attr-href": "/detail", "on-click": this.goTo },
-								"detail page"
-							)
-						)
-					)
-				);
-			}
-		}, {
-			key: "goTo",
-			value: function goTo(event) {
-				event.preventDefault();
-				var href = event.currentTarget.getAttribute('href');
-				this.$history.goTo(href);
-			}
-		}, {
-			key: "willMount",
-			value: function willMount() {
-				console.log('willMount');
-			}
-		}, {
-			key: "didMount",
-			value: function didMount() {
-				console.log('didMount');
-			}
-		}, {
-			key: "willUpdate",
-			value: function willUpdate() {
-				console.log('willUpdate');
-			}
-		}, {
-			key: "didUpdate",
-			value: function didUpdate() {
-				console.log('didUpdate');
-			}
-		}, {
-			key: "willUnmount",
-			value: function willUnmount() {
-				console.log('willUnmount');
-			}
-		}]);
+	exports.INCREMENT_IF_ODD = INCREMENT_IF_ODD;
+	var ASYNC_INCREMENT = function ASYNC_INCREMENT(state, data) {
+	    return new Promise(function (resolve, reject) {
+	        setTimeout(function () {
+	            var count = state.count;
 
-		return Controller;
-	})();
-
-	exports["default"] = Controller;
-	module.exports = exports["default"];
+	            count += 1;
+	            resolve(_extends({}, state, {
+	                count: count
+	            }));
+	        }, 1000);
+	    });
+	};
+	exports.ASYNC_INCREMENT = ASYNC_INCREMENT;
 
 /***/ }
 /******/ ]);

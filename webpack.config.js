@@ -9,7 +9,7 @@ module.exports = {
     },
     output: {
         path: './examples/',
-        filename: '[name]/index.js'
+        filename: '[name]/dest/index.js'
     },
     module: {
         loaders: [{

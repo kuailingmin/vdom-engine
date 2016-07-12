@@ -1,5 +1,5 @@
 // controller
-import React from 'vdom-engine/share'
+import React, { h } from 'vdom-engine/share'
 
 export default class Controller {
 	constructor() {
