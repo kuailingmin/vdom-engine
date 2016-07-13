@@ -7,7 +7,7 @@ export default function createHistory(options) {
 	let parse = createLocationParser(settings)
 	let { useHash, rootPath, hashPrefix, parseQuery } = settings
 
-	function addListener(listener) {
+	function listen(listener) {
 		if (useHash) {
 			window.addEventListener('hashchange', listener)
 		} else {
@@ -15,7 +15,7 @@ export default function createHistory(options) {
 		}
 	}
 
-	function removeListener(listener) {
+	function unlisten(listener) {
 		if (useHash) {
 			window.removeEventListener('hashchange', listener)
 		} else {
@@ -44,6 +44,8 @@ export default function createHistory(options) {
 	}
 
 	return {
+		listen,
+		unlisten,
 		parse,
 		goTo,
 		goIndex,

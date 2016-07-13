@@ -1,8 +1,8 @@
 import * as _ from './util'
 import querystring from 'querystring'
 
-export default function createLocationParser(options) {
-    let { useHash, rootPath, hashPrefix, parseQuery } = options
+export default function createLocationParser(settings) {
+    let { useHash, rootPath, hashPrefix, parseQuery } = settings
     let ROOT_PATH_RE = new RegExp(`^${rootPath}`)
     let HASH_PREFIX_RE = new RegExp(`^#${hashPrefix}`)
 
