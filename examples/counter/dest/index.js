@@ -2108,9 +2108,8 @@
 		var currentCallback = function currentCallback() {};
 
 		var historyAPI = {
-			goTo: function goTo(path, isReplace) {
-				isReplace ? history.replace(path) : history.push(path);
-			},
+			goReplace: history.replace,
+			goTo: history.push,
 			goIndex: history.go,
 			goBack: history.goBack,
 			goForward: history.goForward
@@ -2187,6 +2186,7 @@
 				unlistenBeforeLeave && unlistenBeforeLeave();
 				unlistenBeforeUnload && unlistenBeforeUnload();
 			};
+			controller.refreshView = renderToContainer;
 
 			_.extend(controller, historyAPI);
 

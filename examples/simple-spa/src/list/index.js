@@ -13,6 +13,7 @@ export default class Controller {
 	}
 	init($location) {
 		this.$location = $location
+		console.log('init', $location)
 		return this.render()
 	}
 	update($location) {
@@ -43,7 +44,14 @@ export default class Controller {
 		event.preventDefault()
 		let { pathname, search } = event.currentTarget
 		console.log('jump')
-		this.goTo({ pathname, search })
+		this.goTo({
+			pathname,
+			search,
+			state: {
+				name: 'list',
+				test: 1
+			}
+		})
 	}
 	willMount() {
 		console.log('willMount')

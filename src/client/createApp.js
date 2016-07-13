@@ -22,9 +22,8 @@ export default function createApp(appSettings) {
 	let currentCallback = () => {}
 
 	let historyAPI = {
-		goTo(path, isReplace) {
-			isReplace ? history.replace(path) : history.push(path)
-		},
+		goReplace: history.replace,
+		goTo: history.push,
 		goIndex: history.go,
 		goBack: history.goBack,
 		goForward: history.goForward,
@@ -99,6 +98,7 @@ export default function createApp(appSettings) {
 			unlistenBeforeLeave && unlistenBeforeLeave()
 			unlistenBeforeUnload && unlistenBeforeUnload()
 		}
+		controller.refreshView = renderToContainer
 
 		_.extend(controller, historyAPI)
 
