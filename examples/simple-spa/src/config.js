@@ -3,7 +3,10 @@
  */
 export default {
 	container: '#container',
-	pushState: true,
-	hashPrefix: '!',
-	rootPath: '/examples/simple-spa',
+	historySettings: {
+		// type: 'createHistory',
+		type: 'createHashHistory',
+		useQueries: true,
+		basename: '/examples/simple-spa',
+	},
 }

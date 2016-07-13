@@ -1,11 +1,15 @@
-import ReactDOM, { App } from 'vdom-engine/client'
+import ReactDOM, { createApp } from 'vdom-engine/client'
 import routes from './routes'
 import config from './config'
 
-const app = new App({
+const app = createApp({
 	...config,
 	routes,
-	viewEngine: ReactDOM
+	viewEngine: {
+		render: (component, container) => {
+			ReactDOM.render(component, container)
+		},
+	},
 })
 
 app.start()

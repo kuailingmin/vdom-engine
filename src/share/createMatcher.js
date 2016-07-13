@@ -10,8 +10,8 @@ export default function createMatcher($routes) {
             let matches = route.regexp.exec(pathname)
             if (matches) {
                 let params = getParams(matches, route.keys)
-                let action = route.action
-                return { params, action }
+                let controller = route.controller
+                return { params, controller }
             }
         }
     }

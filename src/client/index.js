@@ -1,9 +1,9 @@
 // placeholder
 import { render, destroy } from './render'
-import App from './App'
+import createApp from './createApp'
 
 const Client = {
-	App,
+	createApp,
 	render,
 	destroy,
 }

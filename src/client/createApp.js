@@ -39,24 +39,34 @@ export default function createApp(appSettings) {
 	}
 
 	function matchController(location) {
+		// check if is equal to current location
+		if (currentLocation) {
+			if (currentLocation.pathname === location.pathname) {
+				if (currentController && currentController.update) {
+					currentController.update(location)
+				}
+				return
+			}
+		}
+
 		let matches = matcher(location.pathname)
-		if (matches) {
+		if (!matches) {
 			throw new Error(`Did not match any route with pathname:${location.pathname}`)
 		}
-		let { params, action } = matches.action
-		let actionType = typeof action
+		let { params, controller } = matches
+		let controllerType = typeof controller
 		let target = null
 
 		location.params = params
 		currentLocation = location
 
-		if (actionType === 'string') {
-			loader(action, handler)
+		if (controllerType === 'string') {
+			loader(controller, handler)
 			return
 		}
 
-		if (actionType === 'function') {
-			target = action(location)
+		if (controllerType === 'function') {
+			target = controller(location)
 		}
 
 		if (_.isThenable(target)) {
@@ -68,9 +78,7 @@ export default function createApp(appSettings) {
 
 	function handler(Controller) {
 		if (currentController) {
-			currentController.$unlisten()
-			currentController.destroy(currentLocation)
-			clearContainer()
+			destroyController()
 		}
 
 		let controller = currentController = new Controller(context)
@@ -96,7 +104,10 @@ export default function createApp(appSettings) {
 
 		let component = controller.init(currentLocation)
 
-		if (_.isThenable(component)) {
+		// if controller.init return false, do nothing
+		if (component === false) {
+			return
+		} else if (_.isThenable(component)) {
 			component.then(renderToContainer)
 		} else {
 			renderToContainer(component)
@@ -113,9 +124,19 @@ export default function createApp(appSettings) {
 		}
 	}
 
+	function destroyController() {
+	    if (currentController) {
+	        currentController.$unlisten()
+	        if (currentController.destroy) {
+	            currentController.destroy(currentLocation)
+	        }
+	        currentController = null
+	    }
+	}
+
 	function start() {
 		unlisten = history.listen(matchController)
-		listener(history.getCurrentLocation())
+		matchController(history.getCurrentLocation())
 	}
 
 	function stop() {
@@ -124,11 +145,7 @@ export default function createApp(appSettings) {
 			unlisten()
 			unlisten = null
 		}
-		if (currentController) {
-			currentController.$unlisten()
-			currentController.destroy(currentLocation)
-			currentController = null
-		}
+		destroyController()
 	}
 
 	return  { start, stop }

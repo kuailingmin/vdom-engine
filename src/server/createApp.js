@@ -14,21 +14,21 @@ export default function createApp(appSettings) {
 
 	function matchController(location) {
 		let matches = matcher(location.pathname)
-		if (matches) {
+		if (!matches) {
 			throw new Error(`Did not match any route with pathname:${location.pathname}`)
 		}
-		let { params, action } = matches.action
-		let actionType = typeof action
+		let { params, controller } = matches
+		let controllerType = typeof controller
 		let target = null
 
 		location.params = params
 
-		if (actionType === 'string') {
-			return loader(action, handler)
+		if (controllerType === 'string') {
+			return loader(controller, handler)
 		}
 
-		if (actionType === 'function') {
-			target = action(location)
+		if (controllerType === 'function') {
+			target = controller(location)
 		}
 
 		if (_.isThenable(target)) {
