@@ -38,7 +38,7 @@ export default function createApp(appSettings) {
 	}
 
 	function matchController(location) {
-		// check if is equal to current location
+		// check whether equal to current location
 		if (currentLocation) {
 			if (currentLocation.pathname === location.pathname) {
 				if (currentController && currentController.update) {
@@ -60,7 +60,7 @@ export default function createApp(appSettings) {
 		currentLocation = location
 
 		if (controllerType === 'string') {
-			loader(controller, handler)
+			loader(controller, initController)
 			return
 		}
 
@@ -69,13 +69,13 @@ export default function createApp(appSettings) {
 		}
 
 		if (_.isThenable(target)) {
-			target.then(handler)
+			target.then(initController)
 		} else {
-			handler(target)
+			initController(target)
 		}
 	}
 
-	function handler(Controller) {
+	function initController(Controller) {
 		if (currentController) {
 			destroyController()
 		}
@@ -95,8 +95,14 @@ export default function createApp(appSettings) {
 		}
 
 		controller.$unlisten = () => {
-			unlistenBeforeLeave && unlistenBeforeLeave()
-			unlistenBeforeUnload && unlistenBeforeUnload()
+			if (unlistenBeforeLeave) {
+				unlistenBeforeLeave()
+				unlistenBeforeLeave = null
+			}
+			if (unlistenBeforeUnload) {
+				unlistenBeforeUnload()
+				unlistenBeforeUnload = null
+			}
 		}
 		controller.refreshView = renderToContainer
 
@@ -153,16 +159,9 @@ export default function createApp(appSettings) {
 }
 
 function createHistory(settings) {
-	let { type, basename, useQueries, useBeforeUnload } = settings
-	let create = History[type]
-	if (useQueries) {
-		create = History.useQueries(create)
-	}
-	if (basename) {
-		create = History.useBasename(create)
-	}
-	if (useBeforeUnload) {
-		create = History.useBeforeUnload(create)
-	}
+	let create = History[settings.type]
+	create = History.useBeforeUnload(create)
+	create = History.useQueries(create)
+	create = History.useBasename(create)
 	return create(settings)
 }

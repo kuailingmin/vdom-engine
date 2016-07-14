@@ -39,7 +39,8 @@
     "rollup-plugin-babel": "^1.0.0",
     "rollup-plugin-replace": "^1.1.0",
     "uglify-js": "^2.6.1",
-    "webpack": "^1.12.2"
+    "webpack": "^1.12.2",
+    "bundle-loader": "^0.5.4"
   },
   "npmName": "vdom-engine",
   "npmFileMap": [
@@ -53,6 +54,7 @@
   "dependencies": {
     "history": "^3.0.0",
     "path-to-regexp": "^1.5.3",
-    "querystring": "^0.2.0"
+    "querystring": "^0.2.0",
+    "vdom-engine": "file:./src"
   }
 }

@@ -4,13 +4,17 @@
  * Released under the MIT License.
  */
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('path-to-regexp'), require('querystring')) :
-  typeof define === 'function' && define.amd ? define(['path-to-regexp', 'querystring'], factory) :
-  global.Vengine = factory(global.pathToRegexp,global.querystring);
-}(this, function (pathToRegexp,querystring) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('path-to-regexp'), require('history/lib/createBrowserHistory'), require('history/lib/createHashHistory'), require('history/lib/useQueries'), require('history/lib/useBeforeUnload'), require('history/lib/useBasename')) :
+  typeof define === 'function' && define.amd ? define(['path-to-regexp', 'history/lib/createBrowserHistory', 'history/lib/createHashHistory', 'history/lib/useQueries', 'history/lib/useBeforeUnload', 'history/lib/useBasename'], factory) :
+  global.Vengine = factory(global.pathToRegexp,global.createHistory,global.createHashHistory,global.useQueries,global.useBeforeUnload,global.useBasename);
+}(this, function (pathToRegexp,createHistory,createHashHistory,useQueries,useBeforeUnload,useBasename) { 'use strict';
 
   pathToRegexp = 'default' in pathToRegexp ? pathToRegexp['default'] : pathToRegexp;
-  querystring = 'default' in querystring ? querystring['default'] : querystring;
+  createHistory = 'default' in createHistory ? createHistory['default'] : createHistory;
+  createHashHistory = 'default' in createHashHistory ? createHashHistory['default'] : createHashHistory;
+  useQueries = 'default' in useQueries ? useQueries['default'] : useQueries;
+  useBeforeUnload = 'default' in useBeforeUnload ? useBeforeUnload['default'] : useBeforeUnload;
+  useBasename = 'default' in useBasename ? useBasename['default'] : useBasename;
 
   var emptyList = [];
 
@@ -325,34 +329,31 @@
   	}
   }
 
-  var createMatcher = function createMatcher(routes) {
-      return function (location, data) {
-          var state = extend({}, location);
-          var pathname = cleanPath(state.pathname);
-          var search = cleanSearch(state.search);
-          var params = state.params = {};
-          state.query = querystring.parse(search);
-          for (var pattern in routes) {
-              var isMatched = matchPath(pattern, pathname, params);
-              var handler = routes[pattern];
-              if (isMatched && isFn(handler)) {
-                  handler(params, data);
-                  break;
+  function createMatcher($routes) {
+      var routes = $routes.map(createRoute);
+      return function matcher($pathname) {
+          var pathname = cleanPath($pathname);
+          for (var i = 0, len = routes.length; i < len; i++) {
+              var route = routes[i];
+              var matches = route.regexp.exec(pathname);
+              if (matches) {
+                  var params = getParams(matches, route.keys);
+                  var controller = route.controller;
+                  return { params: params, controller: controller };
               }
           }
-          return state;
       };
-  };
+  }
 
-  function matchPath(path, pathname, params) {
-      var keys = [];
-      var regexp = pathToRegexp(path, keys);
-      var matches = regexp.exec(pathname);
+  function createRoute($route) {
+      var route = extend({}, $route);
+      var keys = route.keys = [];
+      route.regexp = pathToRegexp(route.path, keys);
+      return route;
+  }
 
-      if (!matches) {
-          return false;
-      }
-
+  function getParams(matches, keys) {
+      var params = {};
       for (var i = 1, len = matches.length; i < len; i++) {
           var key = keys[i - 1];
           if (key) {
@@ -363,12 +364,7 @@
               }
           }
       }
-
-      return true;
-  }
-
-  function cleanSearch(search) {
-      return search[0] === '?' ? search.substr(1) : search;
+      return params;
   }
 
   function cleanPath(path) {
@@ -453,6 +449,8 @@
   var HOOK_WILL_UPDATE = 'hook-willUpdate';
   var HOOK_DID_UPDATE = 'hook-didUpdate';
   var HOOK_WILL_UNMOUNT = 'hook-willUnmount';
+  var isClient = typeof window !== 'undefined';
+  var isServer = !isClient;
 
   function createElement(type, props) /* ...children */{
   	var finalProps = {};
@@ -540,6 +538,8 @@
   }
 
   var Share = {
+  	isClient: isClient,
+  	isServer: isServer,
   	h: createElement,
   	createElement: createElement,
   	createFactory: createFactory,
@@ -1215,7 +1215,177 @@
   	return false;
   }
 
+  var History = {
+  	createHistory: createHistory,
+  	createHashHistory: createHashHistory,
+  	useQueries: useQueries,
+  	useBeforeUnload: useBeforeUnload,
+  	useBasename: useBasename
+  };
+
+  function createApp(appSettings) {
+  	var routes = appSettings.routes;
+  	var historySettings = appSettings.historySettings;
+  	var viewEngine = appSettings.viewEngine;
+  	var loader = appSettings.loader;
+  	var context = appSettings.context;
+  	var container = appSettings.container;
+
+  	var history = createHistory$1(historySettings);
+  	var matcher = createMatcher(routes);
+  	var currentLocation = null;
+  	var currentController = null;
+  	var unlisten = null;
+  	var currentCallback = function currentCallback() {};
+
+  	var historyAPI = {
+  		goReplace: history.replace,
+  		goTo: history.push,
+  		goIndex: history.go,
+  		goBack: history.goBack,
+  		goForward: history.goForward
+  	};
+
+  	function getContainer() {
+  		if (typeof container === 'string') {
+  			return document.querySelector(container);
+  		} else {
+  			return container;
+  		}
+  	}
+
+  	function matchController(location) {
+  		// check whether equal to current location
+  		if (currentLocation) {
+  			if (currentLocation.pathname === location.pathname) {
+  				if (currentController && currentController.update) {
+  					currentController.update(location);
+  				}
+  				return;
+  			}
+  		}
+
+  		var matches = matcher(location.pathname);
+  		if (!matches) {
+  			throw new Error('Did not match any route with pathname:' + location.pathname);
+  		}
+  		var params = matches.params;
+  		var controller = matches.controller;
+
+  		var controllerType = typeof controller;
+  		var target = null;
+
+  		location.params = params;
+  		currentLocation = location;
+
+  		if (controllerType === 'string') {
+  			loader(controller, initController);
+  			return;
+  		}
+
+  		if (controllerType === 'function') {
+  			target = controller(location);
+  		}
+
+  		if (isThenable(target)) {
+  			target.then(initController);
+  		} else {
+  			initController(target);
+  		}
+  	}
+
+  	function initController(Controller) {
+  		if (currentController) {
+  			destroyController();
+  		}
+
+  		var controller = currentController = new Controller(context);
+  		var unlistenBeforeLeave = null;
+  		var unlistenBeforeUnload = null;
+
+  		if (controller.beforeLeave) {
+  			var beforeLeave = controller.beforeLeave.bind(controller);
+  			unlistenBeforeLeave = history.listenBefore(beforeLeave);
+  		}
+
+  		if (controller.beforeUnload) {
+  			var beforeUnload = controller.beforeUnload.bind(controller);
+  			unlistenBeforeUnload = history.listenBeforeUnload(beforeUnload);
+  		}
+
+  		controller.$unlisten = function () {
+  			if (unlistenBeforeLeave) {
+  				unlistenBeforeLeave();
+  				unlistenBeforeLeave = null;
+  			}
+  			if (unlistenBeforeUnload) {
+  				unlistenBeforeUnload();
+  				unlistenBeforeUnload = null;
+  			}
+  		};
+  		controller.refreshView = renderToContainer;
+
+  		extend(controller, historyAPI);
+
+  		var component = controller.init(currentLocation);
+
+  		// if controller.init return false, do nothing
+  		if (component === false) {
+  			return;
+  		} else if (isThenable(component)) {
+  			component.then(renderToContainer);
+  		} else {
+  			renderToContainer(component);
+  		}
+  	}
+
+  	function renderToContainer(component) {
+  		viewEngine.render(component, getContainer());
+  	}
+
+  	function clearContainer() {
+  		if (viewEngine.clear) {
+  			viewEngine.clear(getContainer());
+  		}
+  	}
+
+  	function destroyController() {
+  		if (currentController) {
+  			currentController.$unlisten();
+  			if (currentController.destroy) {
+  				currentController.destroy(currentLocation);
+  			}
+  			currentController = null;
+  		}
+  	}
+
+  	function start() {
+  		unlisten = history.listen(matchController);
+  		matchController(history.getCurrentLocation());
+  	}
+
+  	function stop() {
+  		currentLocation = null;
+  		if (unlisten) {
+  			unlisten();
+  			unlisten = null;
+  		}
+  		destroyController();
+  	}
+
+  	return { start: start, stop: stop };
+  }
+
+  function createHistory$1(settings) {
+  	var create = History[settings.type];
+  	create = History.useBeforeUnload(create);
+  	create = History.useQueries(create);
+  	create = History.useBasename(create);
+  	return create(settings);
+  }
+
   var Client = {
+  	createApp: createApp,
   	render: render,
   	destroy: destroy
   };

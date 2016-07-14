@@ -1,25 +1,22 @@
 /**
  * routes
  */
-import home from './home'
-import list from './list'
-import detail from './detail'
 
 export default [
 	{
 		path: '/',
-		controller: () => home,
+		controller: './home/controller'
 	}, {
 		path: '/home',
-		controller: () => home,
+		controller: './home/controller'
 	}, {
 		path: '/list',
-		controller: () => list,
+		controller: './list/controller'
 	}, {
 		path: '/detail',
-		controller: () => detail
+		controller: './detail/controller'
 	},  {
 		path: '*',
-		controller: () => home
+		controller: './home/controller'
 	}
 ]

@@ -11,7 +11,11 @@ export default function createMatcher($routes) {
             if (matches) {
                 let params = getParams(matches, route.keys)
                 let controller = route.controller
-                return { params, controller }
+                return {
+                    path: route.path,
+                    params,
+                    controller
+                }
             }
         }
     }

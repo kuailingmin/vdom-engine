@@ -2,6 +2,7 @@
  * createApp at server
  */
 import * as _ from '../share/util'
+import createMatcher from '../share/createMatcher'
 
 export default function createApp(appSettings) {
 	let {
@@ -9,11 +10,22 @@ export default function createApp(appSettings) {
 		viewEngine,
 		loader,
 		context,
+		basename,
 	} = appSettings
 	let matcher = createMatcher(routes)
+	let BASENAME_RE = new RegExp(`^${basename}`, 'i')
+	let currentLocation = null
 
-	function matchController(location) {
-		let matches = matcher(location.pathname)
+	function matchPathname(pathname) {
+		return matcher(pathname.replace(BASENAME_RE, ''))
+	}
+
+	function matchController($location) {
+		let location = {
+			...$location,
+		}
+		location.pathname = $location.pathname.replace(BASENAME_RE, '')
+		let matches = matchPathname(location.pathname)
 		if (!matches) {
 			throw new Error(`Did not match any route with pathname:${location.pathname}`)
 		}
@@ -22,9 +34,10 @@ export default function createApp(appSettings) {
 		let target = null
 
 		location.params = params
+		currentLocation = location
 
 		if (controllerType === 'string') {
-			return loader(controller, handler)
+			return loader(controller, initController)
 		}
 
 		if (controllerType === 'function') {
@@ -32,14 +45,14 @@ export default function createApp(appSettings) {
 		}
 
 		if (_.isThenable(target)) {
-			return target.then(handler)
+			return target.then(initController)
 		} else {
-			return handler(target)
+			return initController(target)
 		}
 	}
 
-	function handler(Controller) {
-		let controller = currentController = new Controller(context)
+	function initController(Controller) {
+		let controller = new Controller(context)
 		let component = controller.init(currentLocation)
 
 		if (_.isThenable(component)) {
@@ -53,5 +66,5 @@ export default function createApp(appSettings) {
 		return viewEngine.render(component)
 	}
 
-	return { matchController }
+	return { matchController, matchPathname }
 }

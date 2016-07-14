@@ -1,6 +1,34 @@
 /******/ (function(modules) { // webpackBootstrap
+/******/ 	// install a JSONP callback for chunk loading
+/******/ 	var parentJsonpFunction = window["webpackJsonp"];
+/******/ 	window["webpackJsonp"] = function webpackJsonpCallback(chunkIds, moreModules) {
+/******/ 		// add "moreModules" to the modules object,
+/******/ 		// then flag all "chunkIds" as loaded and fire callback
+/******/ 		var moduleId, chunkId, i = 0, callbacks = [];
+/******/ 		for(;i < chunkIds.length; i++) {
+/******/ 			chunkId = chunkIds[i];
+/******/ 			if(installedChunks[chunkId])
+/******/ 				callbacks.push.apply(callbacks, installedChunks[chunkId]);
+/******/ 			installedChunks[chunkId] = 0;
+/******/ 		}
+/******/ 		for(moduleId in moreModules) {
+/******/ 			modules[moduleId] = moreModules[moduleId];
+/******/ 		}
+/******/ 		if(parentJsonpFunction) parentJsonpFunction(chunkIds, moreModules);
+/******/ 		while(callbacks.length)
+/******/ 			callbacks.shift().call(null, __webpack_require__);
+
+/******/ 	};
+
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
+
+/******/ 	// object to store loaded and loading chunks
+/******/ 	// "0" means "already loaded"
+/******/ 	// Array means "loading", array contains callbacks
+/******/ 	var installedChunks = {
+/******/ 		1:0
+/******/ 	};
 
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
@@ -26,6 +54,29 @@
 /******/ 		return module.exports;
 /******/ 	}
 
+/******/ 	// This file contains only the entry chunk.
+/******/ 	// The chunk loading function for additional chunks
+/******/ 	__webpack_require__.e = function requireEnsure(chunkId, callback) {
+/******/ 		// "0" is the signal for "already loaded"
+/******/ 		if(installedChunks[chunkId] === 0)
+/******/ 			return callback.call(null, __webpack_require__);
+
+/******/ 		// an array means "currently loading".
+/******/ 		if(installedChunks[chunkId] !== undefined) {
+/******/ 			installedChunks[chunkId].push(callback);
+/******/ 		} else {
+/******/ 			// start chunk loading
+/******/ 			installedChunks[chunkId] = [callback];
+/******/ 			var head = document.getElementsByTagName('head')[0];
+/******/ 			var script = document.createElement('script');
+/******/ 			script.type = 'text/javascript';
+/******/ 			script.charset = 'utf-8';
+/******/ 			script.async = true;
+
+/******/ 			script.src = __webpack_require__.p + "" + ({"2":"./simple-spa/dest/detail","3":"./simple-spa/dest/home","4":"./simple-spa/dest/list"}[chunkId]||chunkId) + ".js";
+/******/ 			head.appendChild(script);
+/******/ 		}
+/******/ 	};
 
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
@@ -34,7 +85,7 @@
 /******/ 	__webpack_require__.c = installedModules;
 
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
+/******/ 	__webpack_require__.p = "/examples/";
 
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
@@ -50,25 +101,36 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _vdomEngineClient = __webpack_require__(11);
+	var _srcClient = __webpack_require__(11);
 
-	var _vdomEngineClient2 = _interopRequireDefault(_vdomEngineClient);
+	var _srcClient2 = _interopRequireDefault(_srcClient);
 
 	var _routes = __webpack_require__(45);
 
 	var _routes2 = _interopRequireDefault(_routes);
 
-	var _config = __webpack_require__(49);
+	var _config = __webpack_require__(46);
 
 	var _config2 = _interopRequireDefault(_config);
 
-	var app = (0, _vdomEngineClient.createApp)(_extends({}, _config2['default'], {
-		routes: _routes2['default'],
-		viewEngine: {
-			render: function render(component, container) {
-				_vdomEngineClient2['default'].render(component, container);
-			}
-		}
+	var webpackLoader = function webpackLoader(url, initController) {
+	    var load = __webpack_require__(47)(url);
+	    load(function (module) {
+	        var Controller = module['default'] || module;
+	        initController(Controller);
+	    });
+	};
+
+	var viewEngine = {
+	    render: function render(component, container) {
+	        _srcClient2['default'].render(component, container);
+	    }
+	};
+
+	var app = (0, _srcClient.createApp)(_extends({}, _config2['default'], {
+	    routes: _routes2['default'],
+	    loader: webpackLoader,
+	    viewEngine: viewEngine
 	}));
 
 	app.start();
@@ -582,7 +644,11 @@
 	            if (matches) {
 	                var params = getParams(matches, route.keys);
 	                var controller = route.controller;
-	                return { params: params, controller: controller };
+	                return {
+	                    path: route.path,
+	                    params: params,
+	                    controller: controller
+	                };
 	            }
 	        }
 	    };
@@ -2122,7 +2188,7 @@
 		}
 
 		function matchController(location) {
-			// check if is equal to current location
+			// check whether equal to current location
 			if (currentLocation) {
 				if (currentLocation.pathname === location.pathname) {
 					if (currentController && currentController.update) {
@@ -2146,7 +2212,7 @@
 			currentLocation = location;
 
 			if (controllerType === 'string') {
-				loader(controller, handler);
+				loader(controller, initController);
 				return;
 			}
 
@@ -2155,13 +2221,13 @@
 			}
 
 			if (_.isThenable(target)) {
-				target.then(handler);
+				target.then(initController);
 			} else {
-				handler(target);
+				initController(target);
 			}
 		}
 
-		function handler(Controller) {
+		function initController(Controller) {
 			if (currentController) {
 				destroyController();
 			}
@@ -2181,8 +2247,14 @@
 			}
 
 			controller.$unlisten = function () {
-				unlistenBeforeLeave && unlistenBeforeLeave();
-				unlistenBeforeUnload && unlistenBeforeUnload();
+				if (unlistenBeforeLeave) {
+					unlistenBeforeLeave();
+					unlistenBeforeLeave = null;
+				}
+				if (unlistenBeforeUnload) {
+					unlistenBeforeUnload();
+					unlistenBeforeUnload = null;
+				}
 			};
 			controller.refreshView = renderToContainer;
 
@@ -2238,21 +2310,10 @@
 	}
 
 	function createHistory(settings) {
-		var type = settings.type;
-		var basename = settings.basename;
-		var useQueries = settings.useQueries;
-		var useBeforeUnload = settings.useBeforeUnload;
-
-		var create = _shareHistory2['default'][type];
-		if (useQueries) {
-			create = _shareHistory2['default'].useQueries(create);
-		}
-		if (basename) {
-			create = _shareHistory2['default'].useBasename(create);
-		}
-		if (useBeforeUnload) {
-			create = _shareHistory2['default'].useBeforeUnload(create);
-		}
+		var create = _shareHistory2['default'][settings.type];
+		create = _shareHistory2['default'].useBeforeUnload(create);
+		create = _shareHistory2['default'].useQueries(create);
+		create = _shareHistory2['default'].useBasename(create);
 		return create(settings);
 	}
 	module.exports = exports['default'];
@@ -2419,12 +2480,40 @@
 	// shim for using process in browser
 
 	var process = module.exports = {};
+
+	// cached from whatever global is present so that test runners that stub it
+	// don't break things.  But we need to wrap it in a try catch in case it is
+	// wrapped in strict mode code which doesn't define any globals.  It's inside a
+	// function because try/catches deoptimize in certain engines.
+
+	var cachedSetTimeout;
+	var cachedClearTimeout;
+
+	(function () {
+	  try {
+	    cachedSetTimeout = setTimeout;
+	  } catch (e) {
+	    cachedSetTimeout = function () {
+	      throw new Error('setTimeout is not defined');
+	    }
+	  }
+	  try {
+	    cachedClearTimeout = clearTimeout;
+	  } catch (e) {
+	    cachedClearTimeout = function () {
+	      throw new Error('clearTimeout is not defined');
+	    }
+	  }
+	} ())
 	var queue = [];
 	var draining = false;
 	var currentQueue;
 	var queueIndex = -1;
 
 	function cleanUpNextTick() {
+	    if (!draining || !currentQueue) {
+	        return;
+	    }
 	    draining = false;
 	    if (currentQueue.length) {
 	        queue = currentQueue.concat(queue);
@@ -2440,7 +2529,7 @@
 	    if (draining) {
 	        return;
 	    }
-	    var timeout = setTimeout(cleanUpNextTick);
+	    var timeout = cachedSetTimeout(cleanUpNextTick);
 	    draining = true;
 
 	    var len = queue.length;
@@ -2457,7 +2546,7 @@
 	    }
 	    currentQueue = null;
 	    draining = false;
-	    clearTimeout(timeout);
+	    cachedClearTimeout(timeout);
 	}
 
 	process.nextTick = function (fun) {
@@ -2469,7 +2558,7 @@
 	    }
 	    queue.push(new Item(fun, args));
 	    if (queue.length === 1 && !draining) {
-	        setTimeout(drainQueue, 0);
+	        cachedSetTimeout(drainQueue, 0);
 	    }
 	};
 
@@ -4221,518 +4310,37 @@
 /* 43 */,
 /* 44 */,
 /* 45 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * routes
 	 */
+
 	'use strict';
 
 	Object.defineProperty(exports, '__esModule', {
 		value: true
 	});
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	var _home = __webpack_require__(46);
-
-	var _home2 = _interopRequireDefault(_home);
-
-	var _list = __webpack_require__(47);
-
-	var _list2 = _interopRequireDefault(_list);
-
-	var _detail = __webpack_require__(48);
-
-	var _detail2 = _interopRequireDefault(_detail);
-
 	exports['default'] = [{
 		path: '/',
-		controller: function controller() {
-			return _home2['default'];
-		}
+		controller: './home/controller'
 	}, {
 		path: '/home',
-		controller: function controller() {
-			return _home2['default'];
-		}
+		controller: './home/controller'
 	}, {
 		path: '/list',
-		controller: function controller() {
-			return _list2['default'];
-		}
+		controller: './list/controller'
 	}, {
 		path: '/detail',
-		controller: function controller() {
-			return _detail2['default'];
-		}
+		controller: './detail/controller'
 	}, {
 		path: '*',
-		controller: function controller() {
-			return _home2['default'];
-		}
+		controller: './home/controller'
 	}];
 	module.exports = exports['default'];
 
 /***/ },
 /* 46 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// controller
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-		value: true
-	});
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	var _vdomEngineShare = __webpack_require__(1);
-
-	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
-
-	var Controller = (function () {
-		function Controller(context) {
-			_classCallCheck(this, Controller);
-
-			console.log('receive context', context);
-			this.willMount = this.willMount.bind(this);
-			this.didMount = this.didMount.bind(this);
-			this.willUpdate = this.willUpdate.bind(this);
-			this.didUpdate = this.didUpdate.bind(this);
-			this.willUnmount = this.willUnmount.bind(this);
-			this.jump = this.jump.bind(this);
-		}
-
-		_createClass(Controller, [{
-			key: 'init',
-			value: function init($location) {
-				this.$location = $location;
-				console.log('init', $location);
-				return this.render();
-			}
-		}, {
-			key: 'update',
-			value: function update($location) {
-				console.log('update', $location);
-			}
-		}, {
-			key: 'destroy',
-			value: function destroy($location) {
-				console.log('destroy', $location);
-			}
-		}, {
-			key: 'render',
-			value: function render() {
-				return _vdomEngineShare2['default'].createElement(
-					'div',
-					{
-						'hook-willMount': this.willMount,
-						'hook-didMount': this.didMount,
-						'hook-willUpdate': this.willUpdate,
-						'hook-didUpdate': this.didUpdate,
-						'hook-willUnmount': this.willUnmount
-					},
-					_vdomEngineShare2['default'].createElement(
-						'h1',
-						null,
-						'list: ',
-						JSON.stringify(this.$location, null, 2)
-					),
-					_vdomEngineShare2['default'].createElement(
-						'ul',
-						null,
-						_vdomEngineShare2['default'].createElement(
-							'li',
-							null,
-							_vdomEngineShare2['default'].createElement(
-								'a',
-								{ 'attr-href': '/home', 'on-click': this.jump },
-								'home page'
-							)
-						),
-						_vdomEngineShare2['default'].createElement(
-							'li',
-							null,
-							_vdomEngineShare2['default'].createElement(
-								'a',
-								{ 'attr-href': '/list', 'on-click': this.jump },
-								'list page'
-							)
-						),
-						_vdomEngineShare2['default'].createElement(
-							'li',
-							null,
-							_vdomEngineShare2['default'].createElement(
-								'a',
-								{ 'attr-href': '/detail', 'on-click': this.jump },
-								'detail page'
-							)
-						)
-					)
-				);
-			}
-		}, {
-			key: 'jump',
-			value: function jump(event) {
-				event.preventDefault();
-				var _event$currentTarget = event.currentTarget;
-				var pathname = _event$currentTarget.pathname;
-				var search = _event$currentTarget.search;
-
-				console.log('jump');
-				this.goTo({
-					pathname: pathname,
-					search: search,
-					state: {
-						name: 'home'
-					}
-				});
-			}
-		}, {
-			key: 'willMount',
-			value: function willMount() {
-				console.log('willMount');
-			}
-		}, {
-			key: 'didMount',
-			value: function didMount() {
-				console.log('didMount');
-			}
-		}, {
-			key: 'willUpdate',
-			value: function willUpdate() {
-				console.log('willUpdate');
-			}
-		}, {
-			key: 'didUpdate',
-			value: function didUpdate() {
-				console.log('didUpdate');
-			}
-		}, {
-			key: 'willUnmount',
-			value: function willUnmount() {
-				console.log('willUnmount');
-			}
-		}]);
-
-		return Controller;
-	})();
-
-	exports['default'] = Controller;
-	module.exports = exports['default'];
-
-/***/ },
-/* 47 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// controller
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-		value: true
-	});
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	var _vdomEngineShare = __webpack_require__(1);
-
-	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
-
-	var Controller = (function () {
-		function Controller(context) {
-			_classCallCheck(this, Controller);
-
-			console.log('receive context', context);
-			this.willMount = this.willMount.bind(this);
-			this.didMount = this.didMount.bind(this);
-			this.willUpdate = this.willUpdate.bind(this);
-			this.didUpdate = this.didUpdate.bind(this);
-			this.willUnmount = this.willUnmount.bind(this);
-			this.jump = this.jump.bind(this);
-		}
-
-		_createClass(Controller, [{
-			key: 'init',
-			value: function init($location) {
-				this.$location = $location;
-				console.log('init', $location);
-				return this.render();
-			}
-		}, {
-			key: 'update',
-			value: function update($location) {
-				console.log('update', $location);
-			}
-		}, {
-			key: 'destroy',
-			value: function destroy($location) {
-				console.log('destroy', $location);
-			}
-		}, {
-			key: 'render',
-			value: function render() {
-				return _vdomEngineShare2['default'].createElement(
-					'div',
-					{
-						'hook-willMount': this.willMount,
-						'hook-didMount': this.didMount,
-						'hook-willUpdate': this.willUpdate,
-						'hook-didUpdate': this.didUpdate,
-						'hook-willUnmount': this.willUnmount
-					},
-					_vdomEngineShare2['default'].createElement(
-						'h1',
-						null,
-						'list: ',
-						JSON.stringify(this.$location, null, 2)
-					),
-					_vdomEngineShare2['default'].createElement(
-						'ul',
-						null,
-						_vdomEngineShare2['default'].createElement(
-							'li',
-							null,
-							_vdomEngineShare2['default'].createElement(
-								'a',
-								{ 'attr-href': '/home', 'on-click': this.jump },
-								'home page'
-							)
-						),
-						_vdomEngineShare2['default'].createElement(
-							'li',
-							null,
-							_vdomEngineShare2['default'].createElement(
-								'a',
-								{ 'attr-href': '/list', 'on-click': this.jump },
-								'list page'
-							)
-						),
-						_vdomEngineShare2['default'].createElement(
-							'li',
-							null,
-							_vdomEngineShare2['default'].createElement(
-								'a',
-								{ 'attr-href': '/detail', 'on-click': this.jump },
-								'detail page'
-							)
-						)
-					)
-				);
-			}
-		}, {
-			key: 'jump',
-			value: function jump(event) {
-				event.preventDefault();
-				var _event$currentTarget = event.currentTarget;
-				var pathname = _event$currentTarget.pathname;
-				var search = _event$currentTarget.search;
-
-				console.log('jump');
-				this.goTo({
-					pathname: pathname,
-					search: search,
-					state: {
-						name: 'list',
-						test: 1
-					}
-				});
-			}
-		}, {
-			key: 'willMount',
-			value: function willMount() {
-				console.log('willMount');
-			}
-		}, {
-			key: 'didMount',
-			value: function didMount() {
-				console.log('didMount');
-			}
-		}, {
-			key: 'willUpdate',
-			value: function willUpdate() {
-				console.log('willUpdate');
-			}
-		}, {
-			key: 'didUpdate',
-			value: function didUpdate() {
-				console.log('didUpdate');
-			}
-		}, {
-			key: 'willUnmount',
-			value: function willUnmount() {
-				console.log('willUnmount');
-			}
-		}]);
-
-		return Controller;
-	})();
-
-	exports['default'] = Controller;
-	module.exports = exports['default'];
-
-/***/ },
-/* 48 */
-/***/ function(module, exports, __webpack_require__) {
-
-	// controller
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-		value: true
-	});
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	var _vdomEngineShare = __webpack_require__(1);
-
-	var _vdomEngineShare2 = _interopRequireDefault(_vdomEngineShare);
-
-	var Controller = (function () {
-		function Controller(context) {
-			_classCallCheck(this, Controller);
-
-			console.log('receive context', context);
-			this.willMount = this.willMount.bind(this);
-			this.didMount = this.didMount.bind(this);
-			this.willUpdate = this.willUpdate.bind(this);
-			this.didUpdate = this.didUpdate.bind(this);
-			this.willUnmount = this.willUnmount.bind(this);
-			this.jump = this.jump.bind(this);
-		}
-
-		_createClass(Controller, [{
-			key: 'init',
-			value: function init($location) {
-				this.$location = $location;
-				console.log('init', $location);
-				return this.render();
-			}
-		}, {
-			key: 'update',
-			value: function update($location) {
-				console.log('update', $location);
-			}
-		}, {
-			key: 'destroy',
-			value: function destroy($location) {
-				console.log('destroy', $location);
-			}
-		}, {
-			key: 'render',
-			value: function render() {
-				return _vdomEngineShare2['default'].createElement(
-					'div',
-					{
-						'hook-willMount': this.willMount,
-						'hook-didMount': this.didMount,
-						'hook-willUpdate': this.willUpdate,
-						'hook-didUpdate': this.didUpdate,
-						'hook-willUnmount': this.willUnmount
-					},
-					_vdomEngineShare2['default'].createElement(
-						'h1',
-						null,
-						'list: ',
-						JSON.stringify(this.$location, null, 2)
-					),
-					_vdomEngineShare2['default'].createElement(
-						'ul',
-						null,
-						_vdomEngineShare2['default'].createElement(
-							'li',
-							null,
-							_vdomEngineShare2['default'].createElement(
-								'a',
-								{ 'attr-href': '/home', 'on-click': this.jump },
-								'home page'
-							)
-						),
-						_vdomEngineShare2['default'].createElement(
-							'li',
-							null,
-							_vdomEngineShare2['default'].createElement(
-								'a',
-								{ 'attr-href': '/list', 'on-click': this.jump },
-								'list page'
-							)
-						),
-						_vdomEngineShare2['default'].createElement(
-							'li',
-							null,
-							_vdomEngineShare2['default'].createElement(
-								'a',
-								{ 'attr-href': '/detail', 'on-click': this.jump },
-								'detail page'
-							)
-						)
-					)
-				);
-			}
-		}, {
-			key: 'jump',
-			value: function jump(event) {
-				event.preventDefault();
-				var _event$currentTarget = event.currentTarget;
-				var pathname = _event$currentTarget.pathname;
-				var search = _event$currentTarget.search;
-
-				console.log('jump');
-				this.goTo({
-					pathname: pathname,
-					search: search,
-					state: {
-						name: 'detail'
-					}
-				});
-			}
-		}, {
-			key: 'willMount',
-			value: function willMount() {
-				console.log('willMount');
-			}
-		}, {
-			key: 'didMount',
-			value: function didMount() {
-				console.log('didMount');
-			}
-		}, {
-			key: 'willUpdate',
-			value: function willUpdate() {
-				console.log('willUpdate');
-			}
-		}, {
-			key: 'didUpdate',
-			value: function didUpdate() {
-				console.log('didUpdate');
-			}
-		}, {
-			key: 'willUnmount',
-			value: function willUnmount() {
-				console.log('willUnmount');
-			}
-		}]);
-
-		return Controller;
-	})();
-
-	exports['default'] = Controller;
-	module.exports = exports['default'];
-
-/***/ },
-/* 49 */
 /***/ function(module, exports) {
 
 	/**
@@ -4746,13 +4354,74 @@
 	exports['default'] = {
 		container: '#container',
 		historySettings: {
-			// type: 'createHistory',
-			type: 'createHashHistory',
-			useQueries: true,
+			type: 'createHistory',
+			// type: 'createHashHistory',
 			basename: '/examples/simple-spa'
 		}
 	};
 	module.exports = exports['default'];
+
+/***/ },
+/* 47 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var map = {
+		"./config": 46,
+		"./config.js": 46,
+		"./detail/controller": 48,
+		"./detail/controller.js": 48,
+		"./home/controller": 50,
+		"./home/controller.js": 50,
+		"./list/controller": 52,
+		"./list/controller.js": 52,
+		"./routes": 45,
+		"./routes.js": 45
+	};
+	function webpackContext(req) {
+		return __webpack_require__(webpackContextResolve(req));
+	};
+	function webpackContextResolve(req) {
+		return map[req] || (function() { throw new Error("Cannot find module '" + req + "'.") }());
+	};
+	webpackContext.keys = function webpackContextKeys() {
+		return Object.keys(map);
+	};
+	webpackContext.resolve = webpackContextResolve;
+	module.exports = webpackContext;
+	webpackContext.id = 47;
+
+
+/***/ },
+/* 48 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function(cb) {
+		__webpack_require__.e/* nsure */(2, function(require) {
+			cb(__webpack_require__(49));
+		});
+	}
+
+/***/ },
+/* 49 */,
+/* 50 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function(cb) {
+		__webpack_require__.e/* nsure */(3, function(require) {
+			cb(__webpack_require__(51));
+		});
+	}
+
+/***/ },
+/* 51 */,
+/* 52 */
+/***/ function(module, exports, __webpack_require__) {
+
+	module.exports = function(cb) {
+		__webpack_require__.e/* nsure */(4, function(require) {
+			cb(__webpack_require__(53));
+		});
+	}
 
 /***/ }
 /******/ ]);

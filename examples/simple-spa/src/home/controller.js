@@ -1,5 +1,5 @@
 // controller
-import React, { h } from 'vdom-engine/share'
+import React, { h } from '../../../../src/share'
 
 export default class Controller {
 	constructor(context) {
@@ -48,8 +48,7 @@ export default class Controller {
 			pathname,
 			search,
 			state: {
-				name: 'list',
-				test: 1
+				name: 'home'
 			}
 		})
 	}

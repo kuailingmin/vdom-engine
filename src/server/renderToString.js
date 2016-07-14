@@ -6,7 +6,7 @@ import {
     VSTATELESS,
 } from '../share/constant'
 
-export function renderToString(vnode, context) {
+export default function renderToString(vnode, context) {
     addDirective('attr', DOMAttrStringify)
     addDirective('css', StyleStringify)
     return renderVnodeToString(vnode, context)

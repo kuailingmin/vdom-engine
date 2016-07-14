@@ -34,7 +34,7 @@
 /******/ 	__webpack_require__.c = installedModules;
 
 /******/ 	// __webpack_public_path__
-/******/ 	__webpack_require__.p = "";
+/******/ 	__webpack_require__.p = "/examples/";
 
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(0);
@@ -584,7 +584,11 @@
 	            if (matches) {
 	                var params = getParams(matches, route.keys);
 	                var controller = route.controller;
-	                return { params: params, controller: controller };
+	                return {
+	                    path: route.path,
+	                    params: params,
+	                    controller: controller
+	                };
 	            }
 	        }
 	    };
@@ -2124,7 +2128,7 @@
 		}
 
 		function matchController(location) {
-			// check if is equal to current location
+			// check whether equal to current location
 			if (currentLocation) {
 				if (currentLocation.pathname === location.pathname) {
 					if (currentController && currentController.update) {
@@ -2148,7 +2152,7 @@
 			currentLocation = location;
 
 			if (controllerType === 'string') {
-				loader(controller, handler);
+				loader(controller, initController);
 				return;
 			}
 
@@ -2157,13 +2161,13 @@
 			}
 
 			if (_.isThenable(target)) {
-				target.then(handler);
+				target.then(initController);
 			} else {
-				handler(target);
+				initController(target);
 			}
 		}
 
-		function handler(Controller) {
+		function initController(Controller) {
 			if (currentController) {
 				destroyController();
 			}
@@ -2183,8 +2187,14 @@
 			}
 
 			controller.$unlisten = function () {
-				unlistenBeforeLeave && unlistenBeforeLeave();
-				unlistenBeforeUnload && unlistenBeforeUnload();
+				if (unlistenBeforeLeave) {
+					unlistenBeforeLeave();
+					unlistenBeforeLeave = null;
+				}
+				if (unlistenBeforeUnload) {
+					unlistenBeforeUnload();
+					unlistenBeforeUnload = null;
+				}
 			};
 			controller.refreshView = renderToContainer;
 
@@ -2240,21 +2250,10 @@
 	}
 
 	function createHistory(settings) {
-		var type = settings.type;
-		var basename = settings.basename;
-		var useQueries = settings.useQueries;
-		var useBeforeUnload = settings.useBeforeUnload;
-
-		var create = _shareHistory2['default'][type];
-		if (useQueries) {
-			create = _shareHistory2['default'].useQueries(create);
-		}
-		if (basename) {
-			create = _shareHistory2['default'].useBasename(create);
-		}
-		if (useBeforeUnload) {
-			create = _shareHistory2['default'].useBeforeUnload(create);
-		}
+		var create = _shareHistory2['default'][settings.type];
+		create = _shareHistory2['default'].useBeforeUnload(create);
+		create = _shareHistory2['default'].useQueries(create);
+		create = _shareHistory2['default'].useBasename(create);
 		return create(settings);
 	}
 	module.exports = exports['default'];
@@ -2421,12 +2420,40 @@
 	// shim for using process in browser
 
 	var process = module.exports = {};
+
+	// cached from whatever global is present so that test runners that stub it
+	// don't break things.  But we need to wrap it in a try catch in case it is
+	// wrapped in strict mode code which doesn't define any globals.  It's inside a
+	// function because try/catches deoptimize in certain engines.
+
+	var cachedSetTimeout;
+	var cachedClearTimeout;
+
+	(function () {
+	  try {
+	    cachedSetTimeout = setTimeout;
+	  } catch (e) {
+	    cachedSetTimeout = function () {
+	      throw new Error('setTimeout is not defined');
+	    }
+	  }
+	  try {
+	    cachedClearTimeout = clearTimeout;
+	  } catch (e) {
+	    cachedClearTimeout = function () {
+	      throw new Error('clearTimeout is not defined');
+	    }
+	  }
+	} ())
 	var queue = [];
 	var draining = false;
 	var currentQueue;
 	var queueIndex = -1;
 
 	function cleanUpNextTick() {
+	    if (!draining || !currentQueue) {
+	        return;
+	    }
 	    draining = false;
 	    if (currentQueue.length) {
 	        queue = currentQueue.concat(queue);
@@ -2442,7 +2469,7 @@
 	    if (draining) {
 	        return;
 	    }
-	    var timeout = setTimeout(cleanUpNextTick);
+	    var timeout = cachedSetTimeout(cleanUpNextTick);
 	    draining = true;
 
 	    var len = queue.length;
@@ -2459,7 +2486,7 @@
 	    }
 	    currentQueue = null;
 	    draining = false;
-	    clearTimeout(timeout);
+	    cachedClearTimeout(timeout);
 	}
 
 	process.nextTick = function (fun) {
@@ -2471,7 +2498,7 @@
 	    }
 	    queue.push(new Item(fun, args));
 	    if (queue.length === 1 && !draining) {
-	        setTimeout(drainQueue, 0);
+	        cachedSetTimeout(drainQueue, 0);
 	    }
 	};
 
